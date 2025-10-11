@@ -1,0 +1,38 @@
+# Node modules
+/node_modules
+
+# Compilation output
+/dist
+
+# pnpm deploy output
+/bundle
+
+# Hardhat Build Artifacts
+/artifacts
+
+# Hardhat compilation (v2) support directory
+/cache
+
+# Typechain output
+/types
+
+# Hardhat coverage reports
+/coverage
+
+# secret files
+.env
+.env.*
+.secret
+.DS_Store
+.vscode
+yarn-error.log
+package-lock.json
+pnpm-lock.yaml
+.idea
+.env.local
+
+# Dev doc
+residue.md
+/residue.md
+BLUEPRINT.md
+/BLUEPRINT.md
