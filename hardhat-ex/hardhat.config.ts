@@ -1,10 +1,11 @@
 import type { HardhatUserConfig } from "hardhat/config";
 import hardhatViem from "@nomicfoundation/hardhat-viem";
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import hardhatNodeTestRunner from "@nomicfoundation/hardhat-node-test-runner";
 import { configVariable } from "hardhat/config";
 
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxViemPlugin, hardhatViem],
+  plugins: [hardhatToolboxViemPlugin, hardhatViem, hardhatNodeTestRunner],
   solidity: {
     compilers: [
       {
