@@ -270,6 +270,7 @@ contract EscrowFactory is Ownable, Pausable, ReentrancyGuard {
         return true;
     }
 
+    // Read escrow data
     function getData(address _user) external view returns(ReadData memory) {
         return ReadData(
             escrows,

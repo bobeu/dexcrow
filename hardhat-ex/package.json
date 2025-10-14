@@ -22,6 +22,9 @@
     "viem": "^2.38.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "@pythnetwork/pyth-sdk-solidity": "^0.1.0",
+    "@wormhole-foundation/wormhole": "^0.1.0",
+    "merkle-tree": "^1.0.0"
   }
 }

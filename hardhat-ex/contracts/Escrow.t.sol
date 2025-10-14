@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.30;
+// SPDX-License-Identifier: MIT
 
-import {Escrow} from "./Escrow.sol";
-import {IEscrow} from "./interfaces/IEscrow.sol";
-import {Test} from "forge-std/Test.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+pragma  solidity 0.8.30;
+
+import { Escrow } from "./Escrow.sol";
+import { IEscrow } from "./interfaces/IEscrow.sol";
+import { Test } from "forge-std/Test.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Mock ERC20 token for testing
 contract MockERC20 is IERC20 {
@@ -130,6 +131,7 @@ contract EscrowTest is Test {
         uint256 timestamp
     );
 
+    // Initial set up
     function setUp() public {
         // Deploy mock ERC20 token
         mockToken = new MockERC20(1000 ether);
@@ -177,6 +179,7 @@ contract EscrowTest is Test {
         assertTrue(newEscrow.isExpired() == false);
     }
     
+    // Testing for revert: Testing valid buyer address by parsing zero address
     function test_Constructor_InvalidBuyer() public {
         vm.expectRevert("Invalid buyer address");
         new Escrow(
@@ -192,6 +195,7 @@ contract EscrowTest is Test {
         );
     }
     
+    // Testing for revert: Testing valid seller address by parsing zero address
     function test_Constructor_InvalidSeller() public {
         vm.expectRevert("Invalid seller address");
         new Escrow(
@@ -207,6 +211,7 @@ contract EscrowTest is Test {
         );
     }
     
+    // Testing for revert: Testing valid Arbiter address by parsing zero address
     function test_Constructor_InvalidArbiter() public {
         vm.expectRevert("Invalid arbiter address");
         new Escrow(
@@ -222,6 +227,7 @@ contract EscrowTest is Test {
         );
     }
     
+    // Testing for revert: User should not create an escrow with zero amount
     function test_Constructor_InvalidAmount() public {
         vm.expectRevert("Asset amount must be greater than 0");
         new Escrow(
@@ -237,6 +243,7 @@ contract EscrowTest is Test {
         );
     }
     
+    // Testing for revert: Creating an escrow should always ensure that the deadline is in the future
     function test_Constructor_InvalidDeadline() public {
         vm.expectRevert("Deadline must be in the future");
         new Escrow(
@@ -252,6 +259,7 @@ contract EscrowTest is Test {
         );
     }
     
+    // Testing for revert: Dispute window should be greater than zero
     function test_Constructor_InvalidDisputeWindow() public {
         vm.expectRevert("Dispute window must be greater than 0");
         new Escrow(
@@ -267,6 +275,7 @@ contract EscrowTest is Test {
         );
     }
     
+    // Testing for revert: Ensure that the platform fee recipient is not zero address
     function test_Constructor_InvalidPlatformFeeRecipient() public {
         vm.expectRevert("Invalid platform fee recipient");
         new Escrow(
