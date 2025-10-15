@@ -35,7 +35,7 @@ contract TokenRegistry is ITokenRegistry, ReentrancyGuard, Ownable, Pausable {
     
     /// @notice Modifiers
     modifier onlyVerifier() {
-        require(verifiers[msg.sender] || msg.sender == owner(), "TokenRegistry: Not authorized verifier");
+        require(verifiers[_msgSender()] || _msgSender() == owner(), "TokenRegistry: Not authorized verifier");
         _;
     }
     
@@ -53,14 +53,14 @@ contract TokenRegistry is ITokenRegistry, ReentrancyGuard, Ownable, Pausable {
      * @dev Constructor
      * @param _initialChains Initial supported chains
      */
-    constructor(uint256[] memory _initialChains) Ownable(msg.sender) {
+    constructor(uint256[] memory _initialChains) Ownable(_msgSender()) {
         for (uint256 i = 0; i < _initialChains.length; i++) {
             _supportedChains.push(_initialChains[i]);
             _isChainSupported[_initialChains[i]] = true;
         }
         
         // Add owner as verifier
-        verifiers[msg.sender] = true;
+        verifiers[_msgSender()] = true;
     }
 
     /**

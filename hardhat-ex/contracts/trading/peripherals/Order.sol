@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {IOrder} from "../interfaces/IOrder.sol";
-import {ITradingAccount} from "../interfaces/ITradingAccount.sol";
-import {ITradeFactory} from "../interfaces/ITradeFactory.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IOrder } from "../../interfaces/IOrder.sol";
+import { ITradingAccount } from "../../interfaces/ITradingAccount.sol";
+import { ITradeFactory } from "../../interfaces/ITradeFactory.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Order
@@ -28,6 +28,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
     error OnlyFactory();
     error OrderAlreadyFulfilled();
     error OrderAlreadyCancelled();
+    error InsufficientBalanceToFulfilOrder();
 
     // ============ STATE VARIABLES ============
 
@@ -52,7 +53,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
     bytes32 private immutable _orderId;
 
     /**
-     * @dev Pyth price feed ID for live price updates (if applicable)
+     * @dev Pyth price feed ID for live price updates (if applicable i.e if user prefer to use live price field)
      */
     bytes32 private immutable _pythPriceFeedId;
 
@@ -63,7 +64,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
      */
     modifier onlyActive() {
         if (_orderData.status != OrderStatus.ACTIVE) revert OrderNotActive();
-        if (block.timestamp > _orderData.expiresAt) revert OrderExpired();
+        if (_now() > _orderData.expiresAt) revert OrderExpired();
         _;
     }
 
@@ -71,7 +72,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
      * @dev Restricts function access to only the trading account
      */
     modifier onlyTradingAccount() {
-        if (msg.sender != address(_tradingAccount)) revert OnlyTradingAccount();
+        if (_msgSender() != address(_tradingAccount)) revert OnlyTradingAccount();
         _;
     }
 
@@ -79,7 +80,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
      * @dev Restricts function access to only the trade factory
      */
     modifier onlyFactory() {
-        if (msg.sender != address(_tradeFactory)) revert OnlyFactory();
+        if (_msgSender() != address(_tradeFactory)) revert OnlyFactory();
         _;
     }
 
@@ -109,7 +110,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
 
         // Generate order ID
         _orderId = keccak256(abi.encodePacked(
-            block.timestamp,
+            _now(),
             block.chainid,
             tradingAccount_,
             orderData_.tokenAddress,
@@ -139,7 +140,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
             _handleSellOrder(buyer, amount);
         }
 
-        emit OrderFulfilled(_orderId, buyer, amount, block.timestamp);
+        emit OrderFulfilled(_orderId, buyer, amount, _now());
     }
 
     /**
@@ -150,7 +151,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
 
         _orderData.status = OrderStatus.CANCELLED;
 
-        emit OrderCancelled(_orderId, _orderData.amount, block.timestamp);
+        emit OrderCancelled(_orderId, _orderData.amount, _now());
     }
 
     /**
@@ -163,7 +164,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
 
         _orderData.price = newPrice;
 
-        emit OrderPriceUpdated(_orderId, newPrice, block.timestamp);
+        emit OrderPriceUpdated(_orderId, newPrice, _now());
     }
 
     /**
@@ -172,10 +173,15 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
     function blacklistOrder() external override onlyFactory {
         _orderData.status = OrderStatus.BLACKLISTED;
 
-        emit OrderBlacklisted(_orderId, block.timestamp);
+        emit OrderBlacklisted(_orderId, _now());
     }
 
     // ============ INTERNAL FUNCTIONS ============
+
+    // Get the current block time stamp
+    function _now() internal view returns(uint currentTime){
+        currentTime = block.timestamp;
+    }
 
     /**
      * @dev Handle buy order fulfillment
@@ -193,8 +199,10 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
         // Transfer payment from buyer to seller
         if (_orderData.tokenAddress == bytes32(uint256(uint160(address(0))))) {
             // Native ETH transfer
+            if(address(this).balance < totalCost) revert InsufficientBalanceToFulfilOrder();
             (bool success, ) = payable(_tradingAccount.owner()).call{value: totalCost}("");
             if (!success) revert TransferFailed();
+            
         } else {
             // ERC20 token transfer
             address tokenAddr = address(uint160(uint256(_orderData.tokenAddress)));
@@ -354,7 +362,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
      * @return isActive_ Whether order is active
      */
     function isActive() external view override returns (bool isActive_) {
-        isActive_ = _orderData.status == OrderStatus.ACTIVE && block.timestamp <= _orderData.expiresAt;
+        isActive_ = _orderData.status == OrderStatus.ACTIVE && _now() <= _orderData.expiresAt;
     }
 
     /**
@@ -362,7 +370,7 @@ contract Order is IOrder, ReentrancyGuard, Pausable {
      * @return isExpired_ Whether order is expired
      */
     function isExpired() external view override returns (bool isExpired_) {
-        isExpired_ = block.timestamp > _orderData.expiresAt;
+        isExpired_ = _now() > _orderData.expiresAt;
     }
 
     // ============ ADMIN FUNCTIONS ============

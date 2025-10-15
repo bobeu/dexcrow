@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.30;
 
 /**
@@ -9,7 +10,7 @@ pragma solidity 0.8.30;
 interface ICrossChainEscrow {
     /// @notice Supported blockchain networks
     enum ChainType {
-        EVM,        // Ethereum, Polygon, BSC, Arbitrum, Optimism, Avalanche
+        EVM,        // Ethereum, Polygon, Celo, Base, BSC, Arbitrum, Optimism, Avalanche, etc
         SOLANA,     // Solana blockchain
         COSMOS      // Cosmos ecosystem
     }

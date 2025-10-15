@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.30;
+
+pragma solidity 0.8.30;
 
 import { ICrossChainEscrow } from "./interfaces/ICrossChainEscrow.sol";
 import { IWormholeMessenger } from "./interfaces/IWormholeMessenger.sol";

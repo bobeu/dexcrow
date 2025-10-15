@@ -1,32 +1,61 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { ICommon } from "./ICommon.sol";
+
 /**
  * @title ITradingAccount
  * @dev Interface for individual trading accounts
  * @author TradeVerse Team
  */
-interface ITradingAccount {
+interface ITradingAccount is ICommon {
+    enum OrderStatus {
+        INACTIVE,
+        ACTIVE, 
+        FULFILLED,
+        CANCELLED,
+        EXPIRED 
+    }
+
+    // enum FundType {
+    //     NATIVE,
+    //     ERC20
+    // }
+
     // Structs
+    struct SellerInfo {
+        bytes nickName;
+        uint256 reputation;
+        address id;
+    }
+
+    struct OrderIndex {
+        uint index;
+        bool hasIndex;
+    }
+
+    struct AssetDetail {
+        uint8 decimals;
+        bytes name;
+        bytes symbol;
+        address tokenAddress;
+    }
+
     struct OrderDetails {
-        bytes32 tokenAddress;
-        uint256 chainId;
         uint256 amount;
-        uint256 price;
-        bool useLivePrice;
-        bytes32 nickname;
+        uint256 pricePerUnit;
         uint256 createdAt;
         uint256 expiresAt;
-        uint8 orderType; // 0 = BUY, 1 = SELL
-        uint8 status;    // 0 = ACTIVE, 1 = FULFILLED, 2 = CANCELLED, 3 = EXPIRED, 4 = BLACKLISTED
         uint256 reputation;
+        AssetDetail asseetInfo;
+        OrderStatus status;
     }
 
     struct WithdrawalRequest {
         uint256 amount;
         uint256 requestedAt;
         uint256 cooldownEnd;
-        bool isProcessed;
+        bool isOpen;
     }
 
     struct AccountData {
@@ -42,8 +71,8 @@ interface ITradingAccount {
     // Events
     event OrderCreated(
         bytes32 indexed orderId,
-        bytes32 indexed tokenAddress,
-        uint256 indexed chainId,
+        address indexed tokenAddress,
+        uint indexed orderIndex,
         uint256 amount,
         uint256 price,
         bool useLivePrice,
@@ -52,14 +81,15 @@ interface ITradingAccount {
     
     event OrderCancelled(
         bytes32 indexed orderId,
-        bytes32 indexed tokenAddress,
+        address indexed tokenAddress,
         uint256 amount
     );
     
     event AssetDeposited(
         address indexed token,
         uint256 amount,
-        uint256 newBalance
+        uint256 erc20Balance,
+        uint256 nativeBalance
     );
     
     event AssetWithdrawn(
@@ -84,14 +114,13 @@ interface ITradingAccount {
 
     // Functions
     function createOrder(
+        address seller,
         bytes32 tokenAddress,
-        uint256 chainId,
         uint256 amount,
         uint256 price,
-        bool useLivePrice,
         uint256 expirationHours,
         bytes32 nickname
-    ) external returns (address order, bytes32 orderId);
+    ) external payable returns (address order, bytes32 orderId);
 
     function cancelOrder(bytes32 orderId) external;
 
@@ -119,7 +148,7 @@ interface ITradingAccount {
 
     function getWithdrawalRequest(address token) external view returns (WithdrawalRequest memory);
 
-    function owner() external view returns (address);
+    function getOwnerAndApproved(address agent) external view returns (address);
 
     function tradeFactory() external view returns (address);
 
@@ -130,4 +159,6 @@ interface ITradingAccount {
     function successfulOrders() external view returns (uint256);
 
     function cancelledOrders() external view returns (uint256);
+
+    function deactivateAccount(bool stop) external returns (bool);
 }

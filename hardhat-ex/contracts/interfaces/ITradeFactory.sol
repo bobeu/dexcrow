@@ -1,50 +1,66 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import { ICommon } from "./ICommon.sol";
+
 /**
  * @title ITradeFactory
  * @dev Interface for the trade factory contract
  * @author TradeVerse Team
  */
-interface ITradeFactory {
+interface ITradeFactory is ICommon {
+    enum FeeType {
+        PLATFORM,
+        CREATION
+    }
+
+    enum OrderStatus {
+        ACTIVE,
+        INACTIVE
+    }
+
     // Structs
+    // struct AccountInfo {
+    //     address user;
+    //     address tradingAccount;
+    //     uint256 reputation;
+    //     uint256 totalOrders;
+    //     uint256 successfulOrders;
+    //     uint256 cancelledOrders;
+    //     uint256 createdAt;
+    // }
+    // Structs
+
     struct AccountInfo {
         address user;
         address tradingAccount;
-        uint256 reputation;
-        uint256 totalOrders;
-        uint256 successfulOrders;
-        uint256 cancelledOrders;
         uint256 createdAt;
     }
 
-    struct OrderInfo {
-        bytes32 orderId;
-        address user;
-        address tradingAccount;
-        address order;
-        bytes32 tokenAddress;
-        uint256 chainId;
-        uint256 amount;
-        uint256 price;
-        bool useLivePrice;
-        uint256 createdAt;
-        uint8 status; // 0 = ACTIVE, 1 = FULFILLED, 2 = CANCELLED, 3 = EXPIRED, 4 = BLACKLISTED
+    struct Index {
+        uint index;
+        bool hasIndex;
     }
 
-    struct SupportedChain {
-        uint256 chainId;
-        string chainName;
-        bool isActive;
-        address factoryAddress;
-    }
+    // struct OrderInfo {
+    //     bytes32 orderId;
+    //     address user;
+    //     address tradingAccount;
+    //     address order;
+    //     bytes32 tokenAddress;
+    //     uint256 amount;
+    //     uint256 price;
+    //     bool useLivePrice;
+    //     uint256 createdAt;
+    //     uint8 status;
+    // }
 
     struct FactoryData {
         address owner;
         uint256 platformFee;
         uint256 totalFees;
-        uint256 supportedChainCount;
         uint256 totalAccounts;
+        AccountInfo[] accounts;
     }
 
     // Events
@@ -54,48 +70,54 @@ interface ITradeFactory {
         uint256 timestamp
     );
 
-    event OrderCreated(
-        bytes32 indexed orderId,
-        address indexed user,
-        address indexed tradingAccount,
-        address order,
-        bytes32 tokenAddress,
-        uint256 chainId,
-        uint256 amount,
-        uint256 price
+    event NewPaymentAssetAdded(
+        address indexed oldPaymentAsset,
+        address indexed newPaymentAsset
     );
 
-    event OrderExecuted(
-        bytes32 indexed orderId,
-        address indexed user,
-        address indexed buyer,
-        uint256 amount,
-        uint256 platformFee
-    );
+    // event OrderCreated(
+    //     bytes32 indexed orderId,
+    //     address indexed user,
+    //     address indexed tradingAccount,
+    //     address order,
+    //     bytes32 tokenAddress,
+    //     uint256 chainId,
+    //     uint256 amount,
+    //     uint256 price
+    // );
 
-    event OrderCancelled(
-        bytes32 indexed orderId,
-        address indexed user,
-        address indexed tradingAccount
-    );
+    // event OrderExecuted(
+    //     bytes32 indexed orderId,
+    //     address indexed user,
+    //     address indexed buyer,
+    //     uint256 amount,
+    //     uint256 platformFee
+    // );
 
-    event OrderBlacklisted(
-        bytes32 indexed orderId,
-        address indexed user
-    );
+    // event OrderCancelled(
+    //     bytes32 indexed orderId,
+    //     address indexed user,
+    //     address indexed tradingAccount
+    // );
 
-    event ChainAdded(
-        uint256 indexed chainId,
-        string chainName,
-        address factoryAddress
-    );
+    // event OrderBlacklisted(
+    //     bytes32 indexed orderId,
+    //     address indexed user
+    // );
 
-    event ChainRemoved(
-        uint256 indexed chainId
-    );
+    // event ChainAdded(
+    //     uint256 indexed chainId,
+    //     string chainName,
+    //     address factoryAddress
+    // );
 
-    event PlatformFeeSet(
-        uint256 newFee
+    // event ChainRemoved(
+    //     uint256 indexed chainId
+    // );
+
+    event FeeSet(
+        uint256 newFee,
+        FeeType feeType
     );
 
     event FeesWithdrawn(
@@ -106,47 +128,48 @@ interface ITradeFactory {
     // Functions
     function createTradingAccount(address user) external returns (address account);
 
-    function createOrder(
-        bytes32 tokenAddress,
-        uint256 chainId,
-        uint256 amount,
-        uint256 price,
-        bool useLivePrice,
-        uint256 expirationHours,
-        bytes32 nickname
-    ) external returns (bytes32 orderId);
+    // function createOrder(
+    //     address seller,
+    //     bytes32 tokenAddress,
+    //     uint256 amount,
+    //     uint256 price,
+    //     uint256 expirationHours,
+    //     bytes32 nickname
+    // ) external payable returns (bytes32 orderId);
 
-    function executeOrder(bytes32 orderId, address buyer, uint256 amount) external;
+    // function executeOrder(bytes32 orderId, address buyer, uint256 amount) external;
 
-    function cancelOrder(bytes32 orderId) external;
+    // function cancelOrder(bytes32 orderId) external;
 
-    function blacklistOrder(bytes32 orderId) external;
+    // function blacklistOrder(bytes32 orderId) external;
 
-    function addSupportedChain(uint256 chainId, string calldata chainName, address factoryAddress) external;
+    // function addSupportedChain(uint256 chainId, string calldata chainName, address factoryAddress) external;
 
-    function removeSupportedChain(uint256 chainId) external;
+    // function removeSupportedChain(uint256 chainId) external;
 
-    function setPlatformFee(uint256 newFee) external;
+    // function setPlatformFee(uint256 newFee) external;
 
-    function withdrawFees() external;
+    // function setCreationFee(uint256 newFee) external;
 
-    function getFactoryData() external view returns (FactoryData memory);
+    // function withdrawFees() external;
 
-    function getTradingAccount(address user) external view returns (address account);
+    // function getFactoryData() external view returns (FactoryData memory);
 
+    // function getTradingAccount(address user) external view returns (address account);
     function getAccountInfo(address user) external view returns (AccountInfo memory);
+    function getVariables() external view returns(FactoryVariables memory _fvs);
 
-    function getOrderInfo(bytes32 orderId) external view returns (OrderInfo memory);
+    // function getOrderInfo(bytes32 orderId) external view returns (OrderInfo memory);
 
-    function getAccountReputation(address user) external view returns (uint256 reputation);
+    // function getAccountReputation(address user) external view returns (uint256 reputation);
 
-    function getSupportedChains() external view returns (SupportedChain[] memory);
+    // function getSupportedChains() external view returns (SupportedChain[] memory);
 
-    function getSupportedChain(uint256 chainId) external view returns (SupportedChain memory);
+    // function getSupportedChain(uint256 chainId) external view returns (SupportedChain memory);
 
-    function getPlatformFee() external view returns (uint256 fee);
+    // function getPlatformFee() external view returns (uint256 fee);
 
-    function getTotalFees() external view returns (uint256 fees);
+    // function getTotalFees() external view returns (uint256 fees);
 
-    function owner() external view returns (address);
+    // function owner() external view returns (address);
 }
