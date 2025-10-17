@@ -36,11 +36,11 @@ interface ISupportedChains {
     function isSupportedChain(uint256 chainId) external view returns (bool, SupportedChain memory _default);
 
     // Events
+    event ChainAdded(uint256 chainId, string chainName, address factoryAddress);
     event ChainUnsupported(uint chainId);
     event ChainActivated(uint chainId);
 
     // Custom errors
     error InvalidChain();
     error ChainSupported();
-    error UnsupportedChain();
 }

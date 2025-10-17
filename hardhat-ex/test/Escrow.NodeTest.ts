@@ -95,22 +95,22 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
     it("Should revert with invalid buyer address", async function () {
       const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE);
       
-      await assert.rejects(
-        async () => {
-          await viem.deployContract("Escrow", [
-            zeroAddress, // Invalid buyer
-            seller,
-            arbiter,
-            zeroAddress,
-            ASSET_AMOUNT,
-            deadline,
-            DESCRIPTION,
-            BigInt(DISPUTE_WINDOW),
-            platformFeeRecipient
-          ]);
-        },
-        /Invalid buyer address/
-      );
+        await assert.rejects(
+          async () => {
+            await viem.deployContract("Escrow", [
+              zeroAddress, // Invalid buyer
+              seller,
+              arbiter,
+              zeroAddress,
+              ASSET_AMOUNT,
+              deadline,
+              DESCRIPTION,
+              BigInt(DISPUTE_WINDOW),
+              platformFeeRecipient
+            ]);
+          },
+          /InvalidBuyerAddress/
+        );
     });
 
     it("Should revert with invalid seller address", async function () {
@@ -130,7 +130,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             platformFeeRecipient
           ]);
         },
-        /Invalid seller address/
+        /InvalidSellerAddress/
       );
     });
 
@@ -151,7 +151,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             platformFeeRecipient
           ]);
         },
-        /Invalid arbiter address/
+        /InvalidArbiterAddress/
       );
     });
 
@@ -172,7 +172,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             platformFeeRecipient
           ]);
         },
-        /Asset amount must be greater than 0/
+        /AssetAmountMustBeGreaterThanZero/
       );
     });
 
@@ -193,7 +193,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             platformFeeRecipient
           ]);
         },
-        /Deadline must be in the future/
+        /DeadlineMustBeInTheFuture/
       );
     });
   });
@@ -217,7 +217,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: seller 
           });
         },
-        /Only buyer can call this function/
+        /OnlyBuyerCanCall/
       );
     });
 
@@ -228,7 +228,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             value: ASSET_AMOUNT - 1n 
           });
         },
-        /Incorrect ETH amount/
+        /IncorrectETHAmount/
       );
     });
 
@@ -241,7 +241,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await escrow.write.deposit({ value: ASSET_AMOUNT });
         },
-        /Invalid escrow state/
+        /InvalidEscrowState/
       );
     });
   });
@@ -300,7 +300,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await largeEscrow.write.deposit();
         },
-        /Insufficient token balance/
+        /InsufficientTokenBalance/
       );
     });
 
@@ -309,7 +309,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await escrow.write.deposit();
         },
-        /Insufficient token allowance/
+        /InsufficientTokenAllowance/
       );
     });
   });
@@ -340,7 +340,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: seller
           });
         },
-        /Only buyer can call this function/
+        /OnlyBuyerCanCall/
       );
     });
 
@@ -362,7 +362,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await newEscrow.write.confirmFulfillment();
         },
-        /Invalid escrow state/
+        /InvalidEscrowState/
       );
     });
   });
@@ -395,7 +395,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: unauthorizedUser
           });
         },
-        /Only buyer or arbiter can refund funds/
+        /OnlyBuyerOrArbiterCanRefundFunds/
       );
     });
   });
@@ -437,7 +437,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: unauthorizedUser
           });
         },
-        /Only buyer or seller can call this function/
+        /OnlyBuyerOrSellerCanCall/
       );
     });
 
@@ -446,7 +446,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await escrow.write.raiseDispute([""]);
         },
-        /Dispute reason cannot be empty/
+        /DisputeReasonCannotBeEmpty/
       );
     });
 
@@ -494,7 +494,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: unauthorizedUser
           });
         },
-        /Only arbiter can call this function/
+        /OnlyArbiterCanCall/
       );
     });
 
@@ -505,7 +505,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: arbiter
           });
         },
-        /Invalid escrow state/
+        /InvalidEscrowState/
       );
     });
   });
@@ -534,7 +534,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await escrow.write.authorizeAgent([zeroAddress]);
         },
-        /Invalid agent address/
+        /InvalidAgentAddress/
       );
     });
 
@@ -567,7 +567,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: agent
           });
         },
-        /Only authorized agents can call this function/
+        /OnlyAuthorizedAgentsCanCall/
       );
     });
 
@@ -658,7 +658,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await escrow.write.emergencyWithdraw();
         },
-        /Contract must be paused/
+        /ContractMustBePaused/
       );
     });
   });
@@ -735,7 +735,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
         async () => {
           await escrow.write.raiseDispute(["Second dispute"]);
         },
-        /Invalid escrow state/
+        /InvalidEscrowState/
       );
     });
   });

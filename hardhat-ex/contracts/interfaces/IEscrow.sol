@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+/**
+ * @title IEscrow 
+ * @dev Interface for the Escrow contract
+ * @author Bobeu - https://github.com/bobeu
+ */
 interface IEscrow {
     // Events
     event EscrowCreated(

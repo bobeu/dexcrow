@@ -26,14 +26,6 @@ contract SupportedChains is ISupportedChains, Ownable {
      */
     mapping(uint256 => ChainIndex) private _chainIndexes;
 
-    // /**
-    //  * @dev Ensures chain is supported
-    //  */
-    // modifier chainSupported(uint256 chainId) {
-    //     if (!_chainInfo[chainId].isActive) revert UnsupportedChain();
-    //     _;
-    // }
-
     // ============ CONSTRUCTOR ============
 
     /**
@@ -56,7 +48,8 @@ contract SupportedChains is ISupportedChains, Ownable {
         if(!_chainIndexes[chainId].hasIndex) {
             _chainIndexes[chainId] = ChainIndex(_supportedChains.length, true, true);
             SupportedChain memory sC = SupportedChain(
-                    initialChains[i].chainId,
+                    _supportedChains.length,
+                    chainId,
                     abi.encode(bytes(chainName)),
                     true,
                     factoryAddress
@@ -65,8 +58,9 @@ contract SupportedChains is ISupportedChains, Ownable {
 
             emit ChainAdded(chainId, chainName, factoryAddress);
         } else {
+            ChainIndex storage chI = _chainIndexes[chainId];
             if(chI.isSupported) revert ChainSupported();
-            _chainIndexes[chainId].isSupported = true;
+            chI.isSupported = true;
 
             emit ChainActivated(chainId);
         }
@@ -78,8 +72,8 @@ contract SupportedChains is ISupportedChains, Ownable {
      * @param chainName Chain name
      * @param factoryAddress Factory address on the chain
      */
-    function addSupportedChain(uint256 chainId, string calldata chainName, address factoryAddress) external override onlyOwner {
-        if (_chainIndexes[chainId].isSupported) revert ChainSupported();
+    function addSupportedChain(uint256 chainId, string calldata chainName, address factoryAddress) external onlyOwner {
+        if(_chainIndexes[chainId].isSupported) revert ChainSupported();
         _addChain(chainId, chainName, factoryAddress);
     }
 
@@ -91,7 +85,7 @@ contract SupportedChains is ISupportedChains, Ownable {
     function unSupportChain(uint256 chainId) external onlyOwner {
         if (!_chainIndexes[chainId].isSupported) revert UnsupportedChain();
 
-        _chainInfo[chainId].isSupported = false;
+        _chainIndexes[chainId].isSupported = false;
 
         emit ChainUnsupported(chainId);
     }

@@ -293,7 +293,10 @@ contract PythPriceFeed is ReentrancyGuard {
                 ? price.price - latestPrice.price 
                 : latestPrice.price - price.price;
             
-            int64 maxDiff = (latestPrice.price * int64(uint64(maxPriceDeviation))) / 10000;
+            int64 maxDiff;
+            unchecked {
+                maxDiff = (latestPrice.price * int64(uint64(maxPriceDeviation))) / 10000;
+            }
             
             if (priceDiff > maxDiff) {
                 return false;

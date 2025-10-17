@@ -29,7 +29,7 @@
 .DS_Store
 .vscode
 yarn-error.log
-package-lock.json
+# package-lock.json
 pnpm-lock.yaml
 .idea
 .env.local
@@ -40,19 +40,19 @@ residue.md
 BLUEPRINT.md
 /BLUEPRINT.md
 /devdoc.md
-/escrow-system
-/app
-/components
-/lib
-/public
-.eslintrc.json
-/next-env.d.ts
-/tailwind.config.js
-/types.ts
-/next.config.js
-/package.json
-/postcss.config.js
-/README.md
-/tsconfig.json
+# /escrow-system
+# /app
+# /components
+# /lib
+# /public
+# .eslintrc.json
+# /next-env.d.ts
+# /tailwind.config.js
+# /types.ts
+# /next.config.js
+# /package.json
+# /postcss.config.js
+# /README.md
+# /tsconfig.json
 /PROMPT.md
 

@@ -1,26 +1,16 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { ITradeFactory } from "../interfaces/ITradeFactory.sol";
-import { ITradingAccount } from "../interfaces/ITradingAccount.sol";
-import { TradingAccount } from "./peripherals/TradingAccount.sol";
+import { TradingAccount, IERC20, ITradingAccount, ITradeFactory } from "./peripherals/TradingAccount.sol";
 
 /**
  * @title TradeFactory
  * @dev Factory contract for managing trading accounts and orders
  * @author Bobeu : https://github.com/bobeu
  */
-contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
-
-    // ============ CUSTOM ERRORS ============
-    error InvalidOwner();
-    error AccountAlreadyExists();
-    error InvalidAmount();
-    error InvalidFee();
-    error TransferFailed();
-
+contract TradeFactory is ITradeFactory, Ownable {
     // ============ STATE VARIABLES ============
 
     /**
@@ -36,7 +26,7 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
     /**
      * @dev Stable asset universally acceptable as payment across all Trading accounts
      */
-    address private supportedPaymentAsset;
+    SupportPaymentAsset private supportedPaymentAsset;
 
     /**
      * @dev Platform fee percentage (in basis points)
@@ -63,6 +53,19 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
      */
     bool private isPythSupported;
 
+    /**
+     * @dev Pause or resume execution
+     */
+    bool private isPaused;
+
+    /**
+     * @dev Only valid address is allowed
+     */
+    modifier onlyValidAddress(address target) {
+        if(target == address(0)) revert InvalidAddress();
+        _;
+    }
+
     // ============ CONSTRUCTOR ============
 
     /**
@@ -81,13 +84,13 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
      * @param nickName Seller's alias
      * @return account Address of the created trading account
      */
-    function _tryGetTradingAccount(address seller, address agent, string memory nickName) internal returns(bool account) {
+    function _tryGetTradingAccount(address seller, address agent, string memory nickName) internal returns(address account) {
         if(seller == address(0)) revert InvalidOwner();
         Index memory id = _indexes[seller];
         if(!id.hasIndex) {
             // Deploy new trading account and save to storage
             uint currentTime = _now();
-            account = address(new TradingAccount(seller, agent, address(this), nickName));
+            account = address(new TradingAccount(seller, agent, owner(), nickName));
             _indexes[seller] = Index(_accounts.length, true);
             _accounts.push(
                 AccountInfo({
@@ -103,6 +106,28 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
         }
     }
 
+    /**
+     * @dev Get trading account for a user
+     * @param user User address
+     * @return account Trading account data
+     */
+    function _getAccountInfo(address user) internal view returns (AccountInfo memory account) {
+        Index memory id = _indexes[user];
+        if(id.hasIndex) {
+            account = _accounts[id.index];
+        }
+    }
+
+     // Return the fee parameters in state
+    function _getFeeVariables(address any) internal view returns(FactoryVariables memory _fvs) {
+        _fvs.creationFee = creationFee;
+        _fvs.feeDenom = FEE_DENOMINATOR;
+        _fvs.isPythSupported = isPythSupported;
+        _fvs.platformFee = _platformFee;
+        _fvs.supportedPaymentAsset = supportedPaymentAsset;
+        _fvs.alc = _getAccountInfo(any);
+    }
+
     // ============ EXTERNAL FUNCTIONS ============
 
     /**
@@ -112,9 +137,11 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
      * @notice Uses the msg.sender if the parsed address is empty otherwise defaults to user. This allows approved or external accounts
      * such as agent to act on behalf of another.
      */
-    function createTradingAccount(address user, string memory nickName) external override nonReentrant whenNotPaused returns (address account) {
+    function createTradingAccount(address user, string memory nickName) external returns (address account) {
+        if(isPaused) revert Paused();
         address seller = user == address(0)? _msgSender() : user;
-        if(_tradingAccounts[seller] != address(0)) revert AccountAlreadyExists();
+        Index memory id = _indexes[seller];
+        if(id.hasIndex) revert AccountAlreadyExists();
         return _tryGetTradingAccount(seller, _msgSender(), nickName);
     }
 
@@ -125,7 +152,7 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
      * @param newFee New fee percentage (in basis points)
      */
     function setPlatformFee(uint256 newFee) external onlyOwner returns(bool) {
-        if(newFee > MAX_PLATFORM_FEE) revert InvalidFee();
+        if(newFee > 1000) revert InvalidFee(); // Max 10%
         _platformFee = newFee;
         emit FeeSet(newFee, FeeType.PLATFORM);
         return true;
@@ -143,17 +170,23 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
 
     /**
      * @dev Set order creation fee
-     * @param newPaymentAsset New fee percentage (in basis points)
+     * @param newPaymentAsset New supported payment asset - Supports stablecoin only
      */
     function setSupportedPaymentAsset(address newPaymentAsset) external onlyOwner returns(bool){
-        emit NewPaymentAssetAdded(supportedPaymentAsset, newPaymentAsset);
-        supportedPaymentAsset = newPaymentAsset;
+        emit NewPaymentAssetAdded(supportedPaymentAsset.token, newPaymentAsset);
+        // IERC20 tk = IERC20(newPaymentAsset); // Unused variable
+        supportedPaymentAsset = SupportPaymentAsset({
+            decimals: 18, // Default to 18 decimals
+            name: abi.encode(bytes("Token")), // Default name
+            symbol: abi.encode(bytes("TKN")), // Default symbol
+            token: newPaymentAsset
+        });
         return true;
     }
 
     /**
-     * @dev Set order creation fee
-     * @param newFee New fee percentage (in basis points)
+     * @dev Toggle Pyth support status
+     * @return status New Pyth support status
      */
     function toggleIsPythSupportedNetwork() external onlyOwner returns(bool) {
         bool status = isPythSupported;
@@ -164,7 +197,7 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
     /**
      * @dev Withdraw collected fees
      */
-    function withdrawFees() external override onlyOwner {
+    function withdrawFees() external onlyOwner {
         uint256 amount = _totalFees;
         if(amount == 0) revert InvalidAmount();
 
@@ -181,13 +214,8 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
     // ============ VIEW FUNCTIONS ============
 
     // Return the fee parameters in state
-    function getFeeVariables() external view returns(FactoryVariables memory _fvs) {
-        _fvs.creationFee = creationFee;
-        _fvs.feeDenom = FEE_DENOMINATOR;
-        _fvs.isPythSupported = isPythSupported;
-        _fvs.platformFee = platformFee;
-        _fvs.supportedPaymentAsset = supportedPaymentAsset;
-        return _fvs;
+    function getVariables(address any) external view returns(FactoryVariables memory) {
+        return _getFeeVariables(any);
     }
 
     // Get the current block time stamp
@@ -199,13 +227,15 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
      * @dev Get comprehensive factory data
      * @return factoryData Packed factory data
      */
-    function getFactoryData() external view override returns (FactoryData memory factoryData) {
+    function getFactoryData(address any) external view returns (FactoryData memory factoryData) {
         factoryData = FactoryData({
             owner: owner(),
             platformFee: _platformFee,
             totalFees: _totalFees,
             totalAccounts: _accounts.length,
-            accounts = _accounts
+            accounts: _accounts,
+            variables: _getFeeVariables(any),
+            isPaused: isPaused
         });
     }
 
@@ -214,37 +244,16 @@ contract TradeFactory is ITradeFactory, ReentrancyGuard, Ownable {
      * @param user User address
      * @return account Trading account data
      */
-    function getAccountInfo(address user) external view override returns (AccountInfo memory account) {
-        Index memory id = _indexes[user];
-        if(id.hasIndex) {
-            account = _accounts[id.index];
-        }
-        return account;
+    function getAccountInfo(address user) external view override returns (AccountInfo memory) {
+        return _getAccountInfo(user);
     }
 
     // ============ ADMIN FUNCTIONS ============
-
-    // Deactivate account execution
-    function deactivateAccount(address memory alc) external onlyOwner returns(bool) {
-        return ITradingAccount(alc).deactivateAccount(true);
-    }
-
-    // Reactivate account execution
-    function deactivateAccount(address memory alc) external onlyOwner returns(bool) {
-        return ITradingAccount(alc).deactivateAccount(false);
-    } 
-
     /**
      * @dev Pause the contract
      */
-    function pause() external onlyOwner {
-        _pause();
+    function toggleExecution(bool status) external onlyOwner {
+        isPaused = status;
     }
 
-    /**
-     * @dev Unpause the contract
-     */
-    function unpause() external onlyOwner {
-        _unpause();
-    }
 }

@@ -4,9 +4,7 @@ pragma solidity 0.8.30;
 
 import { ITradingAccount } from "../../interfaces/ITradingAccount.sol";
 import { ITradeFactory } from "../../interfaces/ITradeFactory.sol";
-import { IOrder } from "../../interfaces/IOrder.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Approved } from "../../Approved.sol";
@@ -14,55 +12,26 @@ import { Approved } from "../../Approved.sol";
 /**
  * @title TradingAccount
  * @dev Individual trading account contract for each user
- * @author TradeVerse Team
+ * @author Bobeu - https://github.com/bobeu
  */
 contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
     using SafeERC20 for IERC20;
 
     // ============ CUSTOM ERRORS ============
-    error InvalidOwner();
-    error InvalidFactory();
-    error OnlyFactory();
-    error NoWithdrawalRequest();
-    error WithdrawalAlreadyProcessed();
-    error CooldownNotPassed();
-    error InvalidTokenAddress();
-    error InsufficientBalance();
-    error OrderNotFound();
-    error OrderNotActive();
-    error InvalidAmount();
-    error InvalidExpiration();
-    error TransferFailed();
-    error SendingFeeFailed();
-    error PriceNotProvided();
-    error NoFundDetected();
-    error FundFaucetFailed();
-    error InvalidOrderId();
-    error MinimumFundingRequired();
-    error PendingWithdrawalRequest();
-    error InvalidPaymentAsset();
+    error InvalidDuration();
+    error InsufficientOrderDurationFee();
 
     // ============ STATE VARIABLES ============
 
-    // /**
-    //  * @dev Address of the trade factory contract
-    //  */
-    // ITradeFactory private immutable _tradeFactory;
-
-    // /**
-    //  * @dev Address of the seller
-    //  */
-    // address private immutable _seller;
+    /**
+     * @dev Address of the trade factory contract
+     */
+    address private immutable _tradeFactory;
 
     /**
      * @dev Mapping of order IDs to their respective index in the order array
      */
     mapping(bytes32 => OrderIndex) private orderIndex;
-
-    // /**
-    //  * @dev Array of active order IDs
-    //  */
-    // bytes32[] private _activeOrderIds;
 
     /**
      * @dev Mapping of token addresses to balances
@@ -73,21 +42,14 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @dev Mapping of token addresses to locked balances (in orders)
      */
     mapping(address => uint256) private _lockedBalances;
-
+   
     /**
-     * @dev Mapping of token addresses to withdrawal requests
+     * @dev Mapping of token addresses to boolean
+     * Account owners should always add token to verified list before they place buy order.
+     * This is to protect against certain form of attacks where an actor could impersonate a token
+     * and use it as purchasing asset.
      */
-    mapping(address => WithdrawalRequest) private _withdrawalRequests;
-
-    /**
-     * @dev Cooldown period for withdrawals (in seconds)
-     */
-    uint256 private immutable COOLDOWN_PERIOD = 15 minutes;
-
-    /**
-     * @dev Total number of orders created
-     */
-    uint256 private _totalOrders;
+    mapping(address => bool) private isVerified;
 
     /**
      * @dev Number of successful orders
@@ -104,32 +66,18 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      */
     SellerInfo private info;
 
-    OrderDetails private orders;
+    /**
+     * @dev Order list
+     */
+    OrderDetails[] private orders;
 
     // ============ MODIFIERS ============
-
-    // /**
-    //  * @dev Restricts function access to only the trade factory
-    //  */
-    // modifier onlySellerOrAgent() {
-    //     if(_msgSender() != address(_tradeFactory)) revert OnlyFactory();
-    //     _;
-    // }
-
-    /**
-     * @dev Ensures withdrawal request exists and is not processed
-     */
-    modifier hasWithdrawalRequest(address token) {
-        if(_withdrawalRequests[token].amount == 0) revert NoWithdrawalRequest();
-        if(!_withdrawalRequests[token].isOpen) revert WithdrawalAlreadyProcessed();
-        _;
-    }
 
     /**
      * @dev Ensures cooldown period has passed
      */
-    modifier cooldownPassed(address token) {
-        if(_now() < _withdrawalRequests[token].cooldownEnd) revert CooldownNotPassed();
+    modifier onlyFactory {
+        if(_msgSender() != _tradeFactory) revert OnlyFactory();
         _;
     }
 
@@ -139,21 +87,21 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @dev Constructor to initialize the trading account
      * @param _seller Address of the account owner
      * @param agent Agent to act on behalf of the seller
-     * @param nickName Seller's Alias or trade idenfifier
-     * @param tradeFactory Address of the trade factory contract
+     * @param controller Address of the controller
+     * @param nickname Seller's Alias or trade identifier
     */
     constructor(
         address _seller, 
         address agent, 
-        address tradeFactory, 
+        address controller, 
         string memory nickname
-    ) Approved(tradeFactory, seller) 
+    ) Approved(controller, _seller) 
     {
-        if(tradeFactory == address(0)) revert InvalidFactory();
-        if(_seller == address(0)) revert InvalidFactory();
         if(agent != address(0)) _setPermission(agent, true);
         info.nickName = abi.encode(bytes(nickname));
         info.id = _seller;
+        info.agentId = keccak256(abi.encodePacked(agent, _now(), nickname));
+        _tradeFactory = _msgSender();
     }
 
     // Sending ETH via this method activates sell order for native asset
@@ -167,78 +115,83 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         return true;
     }
 
+    // Update nickName
+    function toggleTokenVerificationStatus(address token) external onlyApproved returns(bool) {
+        bool status = isVerified[token];
+        isVerified[token] = !status;
+        return true;
+    }
+
     /**
      * @dev Create a new trading order
-     * @param tokenAddress Token address (as bytes32 for cross-chain compatibility)
+     * @param tokenAddress Token address
      * @param amount Amount of tokens to trade
-     * @param pricePerUnit Price per token
+     * @param price Price per token
      * @param expirationHours Hours until order expires
-     * @param nickname User's nickname 
-     * @return order Address of the created order contract
      * @return orderId Unique identifier for the order
      * @notice Orders are free up to 24 hours. Subsequent extra hours are charged based on the creating fee
      */
     function createOrder(
-        address tokenAddress,
+        bytes32 tokenAddress,
         uint256 amount,
-        uint256 pricePerUnit,
+        uint256 price,
         uint256 expirationHours
-    ) external onlyApproved nonReentrant whenNotPaused returns(address order, bytes32 orderId) {
-        if(_withdrawalRequests[token].isOpen) revert PendingWithdrawalRequest();
+    ) external payable onlyApproved nonReentrant whenNotPaused returns(bytes32 orderId) {
         unchecked {
             if(amount == 0) revert InvalidAmount();
             uint expiration = expirationHours * 1 hours;
-            FactoryVariables memory fv = ITradeFactory(owner()).getVariables();
+            FactoryVariables memory fv = ITradeFactory(owner()).getVariables(_msgSender());
             if(expirationHours == 0) {
                 expiration = 24 hours;
             } else {
                 if(expiration > 24) {
                     uint listDurationFee = fv.creationFee * (expiration - 24);
                     if(listDurationFee > 0) {
-                        if(msg.value < listDurationFee && address(this).balance < listDurationFee) {
-                            revert InsufficientOrderDurationFee();
-                        } else {
-                            (bool sent,) = payable(owner()).call{value:listDurationFee}('');
-                            if(!sent) revert SendingFeeFailed();
+                        if(msg.value < listDurationFee) {
+                            if(_balances[address(0)] >= listDurationFee) {
+                                _balances[address(0)] -= listDurationFee;
+                            } else {
+                                revert InsufficientOrderDurationFee();
+                            }
+                            
                         }
+                        (bool sent,) = payable(owner()).call{value:listDurationFee}('');
+                        if(!sent) revert TransferFailed();
                     }
                 }
             }
             if(!fv.isPythSupported){
-                if(pricePerUnit == 0) revert PriceNotProvided();
+                if(price == 0) revert PriceNotProvided();
             }
             // Generate unique order ID
             orderId = keccak256(abi.encodePacked(
                 _now(),
-                _owner,
+                info.id,
                 tokenAddress,
                 amount,
-                _totalOrders
+                orders.length
             ));
             uint currentTime = _now();
             
-
             // Create order details
             uint index = orders.length;
             orderIndex[orderId] = OrderIndex(index, true);
             orders.push(
                 OrderDetails({
                     amount: amount,
-                    pricePerUnit: pricePerUnit,
+                    pricePerUnit: price,
                     createdAt: currentTime,
                     expiresAt: currentTime + expiration,
-                    reputation: 0,
-                    asseetInfo: _getAssetInfo(tokenAddress, amount),
+                    asseetInfo: _getAssetInfo(address(uint160(uint256(tokenAddress))), amount),
                     status: OrderStatus.ACTIVE
                 })
             );
-            _totalOrders++;
 
-            emit OrderCreated(orderId, tokenAddress, index, amount, price, price == 0, nickname);
+            emit OrderCreated(orderId, address(uint160(uint256(tokenAddress))), index, amount, price, price == 0);
         }
     }
 
-    function _validateOrder(bytes32 orderId) internal returns(OrderDetails storage orderDetails) {
+    function _validateOrder(bytes32 orderId) internal view returns(OrderDetails storage orderDetails) {
         OrderIndex memory oi = orderIndex[orderId];
         if(!oi.hasIndex) revert InvalidOrderId();
         orderDetails = orders[oi.index];
@@ -250,120 +203,156 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @dev Cancel an existing order
      * @param orderId ID of the order to cancel
      */
-    function cancelOrder(bytes32 orderId) external nonReentrant onlyApproved whenNotPaused {
-        // OrderIndex memory oi = orderIndex[orderId];
-        // if(!oi.hasIndex) revert InvalidOrderId();
-        // OrderDetails storage orderDetails = orders[oi.index];
-        // if(orderDetails.amount == 0) revert OrderNotFound();
-        // if(orderDetails.status != OrderStatus.ACTIVE) revert OrderNotActive();
-
+    function cancelOrder(bytes32 orderId) external nonReentrant onlyApproved whenNotPaused returns(bool) {
         OrderDetails storage orderDetails = _validateOrder(orderId);
         orderDetails.status = OrderStatus.CANCELLED;
 
         _cancelledOrders++;
 
         // Unlock the balance
-        address tokenAddr = orderDetails.tokenAddress;
+        address tokenAddr = orderDetails.asseetInfo.tokenAddress;
         unchecked {
             uint256 lockedBal = _lockedBalances[tokenAddr];
             if(lockedBal >= orderDetails.amount) _lockedBalances[tokenAddr] -= orderDetails.amount;
             _balances[tokenAddr] += orderDetails.amount;
 
-            if(orderDetails.reputation > 0) orderDetails.reputation -= 1;
+            if(info.reputation > 0) info.reputation -= 1;
         }
 
         emit OrderCancelled(orderId, tokenAddr, orderDetails.amount);
         orderDetails.amount = 0;
+
+        return true;
     }
 
     /**
      * @dev Deposit tokens into the trading account
      * @param token Token address (address(0) for native ETH)
+     * @notice Seller can deposit. Anyone can also deposit on their behalf
      */
     function deposit(address token) external payable nonReentrant whenNotPaused returns(bool) {
         (address from, uint amount) = (info.id, msg.value);
         unchecked {
-            _balances[address(0)] += amount;
+            _balances[token] += amount;
             if(token != address(0)) {
                 IERC20 tk = IERC20(token);
                 uint256 allowanceFromSeller = tk.allowance(from, address(this));
                 uint256 allowanceFromSender = tk.allowance(_msgSender(), address(this));
                 (from, amount) = allowanceFromSeller > 0? (from, allowanceFromSeller) : (_msgSender(), allowanceFromSender);
-                tk.safeTransferFrom(from, address(this), amount);
-                _balances[token] += amount;
-              
+                tk.safeTransferFrom(from, address(this), amount);              
+            } else {
+                if(amount == 0) revert InvalidAmount();
             }
         }
 
         emit AssetDeposited(token, amount, _balances[token], _balances[address(0)]);
-    }
-
-    /**
-     * @dev Request withdrawal of tokens
-     * @param token Token address to withdraw
-     * @param amount Amount to withdraw
-     */
-    function requestWithdrawal(address token, uint256 amount) external onlyApproved nonReentrant whenNotPaused {
-        if(amount == 0) revert InvalidAmount();
-        uint256 withdrawable = _balances[token]; // Pull either erc20 or native balance
-        if(withdrawable < amount) revert InsufficientBalance();
-
-        uint currentTime = _now();
-        _withdrawalRequests[token] = WithdrawalRequest({
-            amount: amount,
-            requestedAt: currentTime,
-            cooldownEnd: currentTime + COOLDOWN_PERIOD,
-            isOpen: true
-        });
-
-        emit WithdrawalRequested(token, amount, currentTime + COOLDOWN_PERIOD);
+        return true;
     }
 
     /**
      * @dev Process withdrawal after cooldown period
      * @param token Token address to withdraw
+     * @param amount Amount to withdraw
      */
-    function processWithdrawal(address token) 
+    function withdrawal(address token, uint256 amount) 
         external 
         onlyApproved
         nonReentrant 
-        whenNotPaused 
-        hasWithdrawalRequest(token) 
-        cooldownPassed(token) 
+        returns(bool)
     {
-        WithdrawalRequest storage request = _withdrawalRequests[token];
-        request.isOpen = false;
         uint256 balances = _balances[token];
-        if(balances >= request.amount) {
-            unchecked {
-                _balances[token] = balances - request.amount;
-            }
-        } 
+        if(balances < amount) revert BalanceTooLow();
+        unchecked {
+            _balances[token] = balances - amount;
+        }
         address _seller = info.id;
         if(token == address(0)) {
             // Native ETH withdrawal
-            (bool success, ) = payable(_seller).call{value: request.amount}("");
+            (bool success, ) = payable(_seller).call{value: amount}("");
             if(!success) revert TransferFailed();
         } else {
             // ERC20 token withdrawal
-            IERC20(token).safeTransfer(_seller, request.amount);
+            IERC20(token).safeTransfer(_seller, amount);
         }
-        request.amount = 0;
 
-        emit AssetWithdrawn(token, request.amount, _balances[token]);
+        emit AssetWithdrawn(token, amount, _balances[token]);
+        return true;
     }
 
-    // /**
-    //  * @dev Set cooldown period for withdrawals
-    //  * @param newCooldownPeriod New cooldown period in seconds
-    //  */
-    // function setCooldownPeriod(uint256 newCooldownPeriod) external override onl {
-    //     if(_msgSender() != _owner) revert InvalidOwner();
-    //     COOLDOWN_PERIOD = newCooldownPeriod;
-    //     emit CooldownPeriodSet(newCooldownPeriod);
-    // }
-
     // ============ FACTORY FUNCTIONS ============
+    
+    /**
+     * @dev Exchange values between the trading account of seller and that of the Buyer
+     * @param totalCost : Total amount requested as payment
+     * @param pricePerUnit : Price per unit of token in trade
+     * @param tokenIn : Address of token purchased. Defaults to Native coin if it is zero address
+     * @param tokenOut : Payment token address
+     * @notice The receiving trading account verifies that trade actually exist between the caller and the owner of this account
+     * The result of the computation determines whether this account will release fund or not. Anyone is free to call this function 
+     * provided they have a genuine trade and are willing to share real value.
+     */
+    function exchangeValues(uint256 totalCost, uint pricePerUnit, address tokenIn, address tokenOut) external payable nonReentrant returns(bool) {
+        // Verify that requested amount and the value seller is willing to give out corresponds otherwise quit
+        if(totalCost == 0 || pricePerUnit == 0) revert InvalidParameters();
+        if(totalCost < pricePerUnit) {
+            revert InvalidTotalRequest();
+        } else {
+            uint volume = totalCost / pricePerUnit;
+            if(volume == 0) revert TradeUnverified();
+            if(tokenIn != address(0)) {
+                // Purchase was ERC20 token
+                if(!isVerified[tokenIn]) revert UnrecognizedAsset();
+                IERC20 tk = IERC20(tokenIn);
+                if(tk.allowance(_msgSender(), address(this)) < volume) revert TrickyMove();
+                tk.safeTransferFrom(_msgSender(), address(this), volume);
+                if(tokenOut == address(0)) {
+                    revert InvalidTokenOut();
+                } else {
+                    tk = IERC20(tokenOut);
+                    if(_balances[tokenOut] < totalCost) revert InsufficientBalForRequestedToken();
+                    _balances[tokenOut] -= totalCost;
+                    tk.safeTransfer(_msgSender(), totalCost);
+                    info.reputation += 5;
+                    
+                    emit ExchangeSuccess(_msgSender(), totalCost, volume, pricePerUnit, tokenOut, tokenIn);
+                }
+            } else {
+                // Purchase was in Native coin
+                if(msg.value < volume) revert TrickyMove();
+            }
+        }
+        return true;
+
+    }
+
+    /**
+     * @dev Activate expired order 
+     * @param orderId ID of the order to activate
+     * @param durationInHours New duration (in hours) through which target order will be valid
+     */
+    function activateOrder(bytes32 orderId, uint32 durationInHours) external payable onlyApproved() returns(bool) {
+        OrderDetails storage orderDetails = _validateOrder(orderId);
+        if(durationInHours == 0) revert InvalidDuration();
+        FactoryVariables memory fv = ITradeFactory(owner()).getVariables(_msgSender());
+        unchecked {
+            uint listDurationFee = fv.creationFee * durationInHours;
+            uint newDuration = durationInHours * 1 hours;
+            if(msg.value < listDurationFee) {
+                if(_balances[address(0)] >= listDurationFee) {
+                    _balances[address(0)] -= listDurationFee;
+                } else {
+                    revert InsufficientOrderDurationFee();
+                }
+                
+            }
+            (bool sent,) = payable(owner()).call{value:listDurationFee}('');
+            if(!sent) revert TransferFailed();
+            orderDetails.expiresAt = newDuration;
+            
+            emit OrderActivated(orderId, newDuration);
+        }
+        return true;
+    }
 
     /**
      * @dev Fulfill an order (called by factory)
@@ -374,18 +363,15 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * Payment for all assets is in stablecoin.
      */
     function fulfillOrder(bytes32 orderId, address buyer, uint256 amount) external returns(bool) {
-        // OrderDetails storage orderDetails = _orders[orderId];
-        // if(orderDetails.amount == 0) revert OrderNotFound();
-        // if(orderDetails.status != uint8(IOrder.OrderStatus.ACTIVE)) revert OrderNotActive();
-
         OrderDetails storage orderDetails = _validateOrder(orderId);
+        if(orderDetails.status != OrderStatus.ACTIVE) revert OrderNotActive();
+        if(_now() > orderDetails.expiresAt) revert OrderExpired();
         orderDetails.status = OrderStatus.FULFILLED;
         _successfulOrders++;
 
         // Unlock the balance
         uint amountTaken = amount;
-        uint totalCost;
-        address tokenAddr = orderDetails.tokenAddres;
+        address tokenAddr = orderDetails.asseetInfo.tokenAddress;
         unchecked {
             if(amount >= orderDetails.amount) {
                 amountTaken = orderDetails.amount;
@@ -396,65 +382,54 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
             _lockedBalances[tokenAddr] = orderDetails.amount;
         }
 
-        if(orderDetails.price == 0) {
+        FactoryVariables memory fv = ITradeFactory(owner()).getVariables(_msgSender());
+        uint totalCost;
+        if(orderDetails.pricePerUnit == 0) {
             // Use price oracle
         } else {
-            totalCost = orderDetails.price * amountTaken;
+            totalCost = orderDetails.pricePerUnit * amountTaken; // Price should be in decimals form
         }
-        FactoryVariables memory fv = ITradeFactory(owner()).getVariables();
-        if(fv.supportedPaymentAsset == address(0)) revert InvalidPaymentAsset();
+        if(fv.supportedPaymentAsset.token == address(0)) revert InvalidPaymentAsset();
+        IERC20 tk = IERC20(fv.supportedPaymentAsset.token);
+        if(tk.allowance(_msgSender(), address(this)) >= totalCost) {
+            tk.safeTransferFrom(_msgSender(), address(this), totalCost);
+        } else {
+            if(fv.alc.tradingAccount == address(0)) revert InvalidFallbackTradingAccount();
+            if(tokenAddr == address(0)) {
+                if(!ITradingAccount(fv.alc.tradingAccount).exchangeValues{value: amount}(totalCost, orderDetails.pricePerUnit, tokenAddr, fv.supportedPaymentAsset.token)) revert FallbackExecutionFailed();
+            } else {
+                IERC20(tokenAddr).safeIncreaseAllowance(fv.alc.tradingAccount, amount);
+                if(!ITradingAccount(fv.alc.tradingAccount).exchangeValues(totalCost, orderDetails.pricePerUnit, tokenAddr, fv.supportedPaymentAsset.token)) revert FallbackExecutionFailed();
+            }
+        }
         
-
-        // if(orderDetails.tokenAddres != address(0)) {
-        //     _balances[tokenAddr] -= amount;
-        // }
-
-        // Remove from active orders
-        // for (uint256 i = 0; i < _activeOrderIds.length; i++) {
-        //     if(_activeOrderIds[i] == orderId) {
-        //         _activeOrderIds[i] = _activeOrderIds[_activeOrderIds.length - 1];
-        //         _activeOrderIds.pop();
-        //         break;
-        //     }
-        // }
+        info.reputation += 2;
 
         emit OrderFulfilled(orderId, buyer, amount);
-    }
-
-    /**
-     * @dev Update reputation (called by factory)
-     * @param orderId ID of the order
-     * @param reputation New reputation value
-     */
-    function updateReputation(bytes32 orderId, uint256 reputation) external override onlyFactory {
-        OrderDetails storage orderDetails = _orders[orderId];
-        if(orderDetails.amount == 0) revert OrderNotFound();
-        
-        orderDetails.reputation = reputation;
+        return true;
     }
 
     // ============ VIEW FUNCTIONS ============
 
-    function _getAssetInfo(address tokenAddr, uint256 amount) internal view returns(AssetDetail memory _info) {
+    function _getAssetInfo(address tokenAddr, uint256 amount) internal returns(AssetDetail memory _info) {
         if(_balances[tokenAddr] < amount) {
             revert MinimumFundingRequired();
-        } else {
-            _balances[tokenAddr] -= amount;
-            _lockedBalances[tokenAddr] += amount;
         }
+        _balances[tokenAddr] -= amount;
+        _lockedBalances[tokenAddr] += amount;
         if(tokenAddr != address(0)) {
             IERC20 tk = IERC20(tokenAddr);
             if(tk.balanceOf(address(this)) == 0) {
-                if(tk.allowance(seller, address(this)) == 0) {
+                if(tk.allowance(info.id, address(this)) == 0) {
                     revert NoFundDetected();
                 } else {
-                    if(!tk.safeTransferFrom(seller, address(this), amount)) revert FundFaucetFailed();
+                    tk.safeTransferFrom(info.id, address(this), amount);
                 }
             }
             _info =  AssetDetail(
-                tk.decimals(),
-                tk.name(),
-                tk.symbol(),
+                18, // Default to 18 decimals for ERC20 tokens
+                "Token", // Default name
+                "TKN", // Default symbol
                 tokenAddr 
             );
         }
@@ -471,31 +446,15 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      */
     function getAccountData() external view override returns (AccountData memory accountData) {
         accountData = AccountData({
-            owner: _owner,
-            tradeFactory: address(_tradeFactory),
-            totalOrders: _totalOrders,
+            owner: info.id,
+            tradeFactory: _tradeFactory,
+            orders: orders,
             successfulOrders: _successfulOrders,
             cancelledOrders: _cancelledOrders,
-            cooldownPeriod: COOLDOWN_PERIOD,
-            activeOrderCount: _activeOrderIds.length
+            activeOrderCount: orders.length,
+            sellerInfo: info
         });
-    }
-
-    /**
-     * @dev Get order details
-     * @param orderId ID of the order
-     * @return orderDetails Order details
-     */
-    function getOrder(bytes32 orderId) external view override returns (OrderDetails memory orderDetails) {
-        orderDetails = _orders[orderId];
-    }
-
-    /**
-     * @dev Get all active order IDs
-     * @return orderIds Array of active order IDs
-     */
-    function getActiveOrderIds() external view override returns (bytes32[] memory orderIds) {
-        orderIds = _activeOrderIds;
+        return accountData;
     }
 
     /**
@@ -503,8 +462,9 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @param token Token address
      * @return balance Token balance
      */
-    function getBalance(address token) external view override returns (uint256 balance) {
+    function getBalance(address token) external view returns (uint256 balance) {
         balance = _balances[token];
+        return balance;
     }
 
     /**
@@ -514,105 +474,14 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      */
     function getLockedBalance(address token) external view override returns (uint256 lockedBalance) {
         lockedBalance = _lockedBalances[token];
-    }
-
-    /**
-     * @dev Get withdrawal request for a specific token
-     * @param token Token address
-     * @return request Withdrawal request details
-     */
-    function getWithdrawalRequest(address token) external view override returns (WithdrawalRequest memory request) {
-        request = _withdrawalRequests[token];
-    }
-
-    /**
-     * @dev Get owner address
-     * @return owner_ Account owner address
-     */
-    function getOwnerAndApproved(address agent) external view override returns (address, bool) {
-        return (owner(), _isApproved(agent));
-    }
-
-    /**
-     * @dev Get trade factory address
-     * @return factory_ Trade factory address
-     */
-    function tradeFactory() external view override returns (address factory_) {
-        factory_ = address(_tradeFactory);
-    }
-
-    /**
-     * @dev Get cooldown period
-     * @return cooldownPeriod_ Cooldown period in seconds
-     */
-    function cooldownPeriod() external view override returns (uint256 cooldownPeriod_) {
-        cooldownPeriod_ = COOLDOWN_PERIOD;
-    }
-
-    /**
-     * @dev Get total orders count
-     * @return totalOrders_ Total number of orders
-     */
-    function totalOrders() external view override returns (uint256 totalOrders_) {
-        totalOrders_ = _totalOrders;
-    }
-
-    /**
-     * @dev Get successful orders count
-     * @return successfulOrders_ Number of successful orders
-     */
-    function successfulOrders() external view override returns (uint256 successfulOrders_) {
-        successfulOrders_ = _successfulOrders;
-    }
-
-    /**
-     * @dev Get cancelled orders count
-     * @return cancelledOrders_ Number of cancelled orders
-     */
-    function cancelledOrders() external view override returns (uint256 cancelledOrders_) {
-        cancelledOrders_ = _cancelledOrders;
+        return lockedBalance;
     }
 
     // ============ ADMIN FUNCTIONS ============
 
     /**
-     * @dev Pause the contract
-     */
-    function pause() external {
-        if(_msgSender() != _owner) revert InvalidOwner();
-        _pause();
-    }
-
-    /**
-     * @dev Unpause the contract
-     */
-    function unpause() external {
-        if(_msgSender() != _owner) revert InvalidOwner();
-        _unpause();
-    }
-
-    /**
-     * @dev Emergency withdraw (only owner)
-     * @param token Token address to withdraw
-     * @param amount Amount to withdraw
-     */
-    function emergencyWithdraw(address token, uint256 amount) external {
-        if(_msgSender() != _owner) revert InvalidOwner();
-        if(amount == 0) revert InvalidAmount();
-        if(_balances[token] < amount) revert InsufficientBalance();
-
-        _balances[token] -= amount;
-
-        if(token == address(0)) {
-            (bool success, ) = payable(_owner).call{value: amount}("");
-            if(!success) revert TransferFailed();
-        } else {
-            IERC20(token).safeTransfer(_owner, amount);
-        }
-    }
-
-    /**
      * @dev Pause execution 
+     * @param stop : Flag that dictates whether to stop execution or not
      * Only the factory contract can pause the Trading account
      */
     function deactivateAccount(bool stop) external onlyOwner returns (bool){

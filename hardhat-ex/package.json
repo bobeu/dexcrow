@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "hardhat test --coverage",
+    "test:coverage": "hardhat test --coverage",
+    "test": "hardhat test",
     "clean": "rm -rf ./dist",
     "compile": "hardhat compile",
     "build": "yarn hardhat build",
