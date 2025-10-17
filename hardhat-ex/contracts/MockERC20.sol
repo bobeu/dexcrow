@@ -23,7 +23,7 @@ contract MockERC20 is ERC20 {
      * @dev Constructor that initializes the token with a name, symbol, and initial supply
      * @param initialSupply The initial supply of tokens to mint to the deployer
      */
-    constructor(uint256 initialSupply) ERC20("MockERC20", "MERC") {
+    constructor(uint256 initialSupply, string memory name_, string memory symbol_) ERC20(name_, symbol_) {
         _mint(msg.sender, initialSupply);
     }
 

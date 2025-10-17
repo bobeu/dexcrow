@@ -217,7 +217,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: seller 
           });
         },
-        /OnlyBuyerCanCall/
+        /0x3318cfd4/
       );
     });
 
@@ -340,7 +340,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: seller
           });
         },
-        /OnlyBuyerCanCall/
+        /0x3318cfd4/
       );
     });
 
@@ -437,7 +437,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: unauthorizedUser
           });
         },
-        /OnlyBuyerOrSellerCanCall/
+        /0x094634d6/
       );
     });
 
@@ -494,7 +494,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: unauthorizedUser
           });
         },
-        /OnlyArbiterCanCall/
+        /0xe90ca8f7/
       );
     });
 
@@ -567,7 +567,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
             account: agent
           });
         },
-        /OnlyAuthorizedAgentsCanCall/
+        /0x88d773c2/
       );
     });
 

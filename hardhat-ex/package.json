@@ -8,7 +8,7 @@
     "clean": "rm -rf ./dist",
     "compile": "hardhat compile",
     "build": "yarn hardhat build",
-    "test:solidity": "yarn hardhat test solidity --coverage"
+    "test:solidity": "yarn hardhat test solidity"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",

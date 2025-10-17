@@ -3,7 +3,7 @@
 pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { TradingAccount, IERC20, ITradingAccount, ITradeFactory } from "./peripherals/TradingAccount.sol";
+import { TradingAccount, IERC20, ITradingAccount, ITradeFactory, IERC20Metadata } from "./peripherals/TradingAccount.sol";
 
 /**
  * @title TradeFactory
@@ -132,17 +132,17 @@ contract TradeFactory is ITradeFactory, Ownable {
 
     /**
      * @dev Create a new trading account for a user
-     * @param user Address of the user
+     * @param agent Address of the user's agent if any
      * @return account Address of the created trading account
      * @notice Uses the msg.sender if the parsed address is empty otherwise defaults to user. This allows approved or external accounts
      * such as agent to act on behalf of another.
      */
-    function createTradingAccount(address user, string memory nickName) external returns (address account) {
+    function createTradingAccount(address agent, string memory nickName) external returns (address account) {
         if(isPaused) revert Paused();
-        address seller = user == address(0)? _msgSender() : user;
+        address seller = _msgSender();
         Index memory id = _indexes[seller];
         if(id.hasIndex) revert AccountAlreadyExists();
-        return _tryGetTradingAccount(seller, _msgSender(), nickName);
+        return _tryGetTradingAccount(seller, agent, nickName);
     }
 
     // ============ FEE MANAGEMENT ============
@@ -152,7 +152,7 @@ contract TradeFactory is ITradeFactory, Ownable {
      * @param newFee New fee percentage (in basis points)
      */
     function setPlatformFee(uint256 newFee) external onlyOwner returns(bool) {
-        if(newFee > 1000) revert InvalidFee(); // Max 10%
+        if(newFee > 5000) revert InvalidFee(); // Arbitrary fee
         _platformFee = newFee;
         emit FeeSet(newFee, FeeType.PLATFORM);
         return true;
@@ -174,11 +174,11 @@ contract TradeFactory is ITradeFactory, Ownable {
      */
     function setSupportedPaymentAsset(address newPaymentAsset) external onlyOwner returns(bool){
         emit NewPaymentAssetAdded(supportedPaymentAsset.token, newPaymentAsset);
-        // IERC20 tk = IERC20(newPaymentAsset); // Unused variable
+        IERC20Metadata tk = IERC20Metadata(newPaymentAsset);
         supportedPaymentAsset = SupportPaymentAsset({
-            decimals: 18, // Default to 18 decimals
-            name: abi.encode(bytes("Token")), // Default name
-            symbol: abi.encode(bytes("TKN")), // Default symbol
+            decimals: tk.decimals(),
+            name: abi.encode(bytes(tk.name())),
+            symbol: abi.encode(bytes(tk.symbol())),
             token: newPaymentAsset
         });
         return true;
