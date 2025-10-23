@@ -1,0 +1,27 @@
+{
+  "contractAddress": "0x58eeFd82452dbd7A3E6977b5ce17eB58Af9b13Ec",
+  "functionName": "hasApproval",
+  "inputCount": 1,
+  "requireArgUpdate": true,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "target",
+          "type": "address"
+        }
+      ],
+      "name": "hasApproval",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

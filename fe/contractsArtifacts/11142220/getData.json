@@ -1,0 +1,65 @@
+{
+  "contractAddress": "0x152238bc1a9498464CA6ad055C4dcD33D495Be64",
+  "functionName": "getData",
+  "inputCount": 0,
+  "requireArgUpdate": true,
+  "abi": [
+    {
+      "inputs": [],
+      "name": "getData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "dev",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "feeTo",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "creationFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "contract IVerifier",
+              "name": "verifier",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IApprovalFactory",
+              "name": "approvalFactory",
+              "type": "address"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "creator",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "identifier",
+                  "type": "address"
+                }
+              ],
+              "internalType": "struct CampaignFactory.Campaign[]",
+              "name": "campaigns",
+              "type": "tuple[]"
+            }
+          ],
+          "internalType": "struct CampaignFactory.ReadData",
+          "name": "data",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

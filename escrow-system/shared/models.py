@@ -33,8 +33,8 @@ class AssetType(Enum):
 class ChainType(Enum):
     """Supported blockchain networks"""
     ETHEREUM = "ethereum"
-    POLYGON = "polygon"
-    ARBITRUM = "arbitrum"
+    BASE = "base"
+    CELO = "celo"
     OPTIMISM = "optimism"
     BSC = "bsc"
     BITCOIN = "bitcoin"

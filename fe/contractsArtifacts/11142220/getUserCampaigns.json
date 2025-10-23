@@ -1,0 +1,44 @@
+{
+  "contractAddress": "0x152238bc1a9498464CA6ad055C4dcD33D495Be64",
+  "functionName": "getUserCampaigns",
+  "inputCount": 1,
+  "requireArgUpdate": true,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "target",
+          "type": "address"
+        }
+      ],
+      "name": "getUserCampaigns",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "campaign",
+              "type": "address"
+            },
+            {
+              "internalType": "bool",
+              "name": "isCreator",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct CampaignFactory.UserCampaign[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

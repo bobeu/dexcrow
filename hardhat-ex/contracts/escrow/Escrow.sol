@@ -7,6 +7,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { SafeERC20, IERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { IEscrow } from "../interfaces/IEscrow.sol";
+import { IEscrowFactory } from "../interfaces/IEscrowFactory.sol";
 
 /**
  * @title Escrow Smart Contract
@@ -30,40 +31,6 @@ import { IEscrow } from "../interfaces/IEscrow.sol";
  */
 contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
     using SafeERC20 for IERC20;
-
-    // Custom Errors
-    error InvalidBuyerAddress();
-    error InvalidSellerAddress();
-    error InvalidArbiterAddress();
-    error AssetAmountMustBeGreaterThanZero();
-    error DeadlineMustBeInTheFuture();
-    error DisputeWindowMustBeGreaterThanZero();
-    error InvalidPlatformFeeRecipient();
-    error OnlyBuyerOrSellerCanCall();
-    error OnlyBuyerCanCall();
-    error OnlySellerCanCall();
-    error OnlyArbiterCanCall();
-    error OnlyAuthorizedAgentsCanCall();
-    error InvalidEscrowState();
-    error EscrowHasExpired();
-    error EscrowHasNotExpired();
-    error IncorrectETHAmount();
-    error ETHNotAcceptedForERC20Escrow();
-    error InsufficientTokenBalance();
-    error InsufficientTokenAllowance();
-    error OnlyBuyerOrArbiterCanReleaseFunds();
-    error OnlyBuyerOrArbiterCanRefundFunds();
-    error DeadlineNotReached();
-    error DisputeReasonCannotBeEmpty();
-    error NoActiveDispute();
-    error ReasoningCannotBeEmpty();
-    error InvalidStateForFundRelease();
-    error TransferToRecipientFailed();
-    error TransferToPlatformFailed();
-    error TransferToArbiterFailed();
-    error InvalidAgentAddress();
-    error ContractMustBePaused();
-    error EmergencyWithdrawFailed();
 
     // ============ STATE VARIABLES ============
     
@@ -162,7 +129,6 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @dev Initializes a new escrow contract with the specified parameters
      * @param _buyer Address of the buyer who will deposit funds
      * @param _seller Address of the seller who will fulfill the transaction
-     * @param _arbiter Address of the arbiter who will resolve disputes
      * @param _assetToken Address of the ERC20 token (address(0) for ETH)
      * @param _assetAmount Amount of tokens/ETH to be escrowed
      * @param _deadline Unix timestamp when the escrow expires
@@ -181,7 +147,6 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
     constructor(
         address _buyer,
         address _seller,
-        address _arbiter,
         address _assetToken,
         uint256 _assetAmount,
         uint256 _deadline,
@@ -192,7 +157,6 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         // Validate all input parameters
         if (_buyer == address(0)) revert InvalidBuyerAddress();
         if (_seller == address(0)) revert InvalidSellerAddress();
-        if (_arbiter == address(0)) revert InvalidArbiterAddress();
         if (_assetAmount == 0) revert AssetAmountMustBeGreaterThanZero();
         if (_deadline <= _now()) revert DeadlineMustBeInTheFuture();
         if (_disputeWindowHours == 0) revert DisputeWindowMustBeGreaterThanZero();
@@ -202,7 +166,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         data.escrowDetails = EscrowDetails({
             buyer: _buyer,
             seller: _seller,
-            arbiter: _arbiter,
+            arbiter: address(0),
             assetToken: _assetToken,
             assetAmount: _assetAmount,
             deadline: _deadline,
@@ -223,7 +187,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         emit EscrowCreated(
             _buyer,
             _seller,
-            _arbiter,
+            address(0),
             _assetToken,
             _assetAmount,
             _deadline
@@ -259,6 +223,24 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      */
     function _encodeString(string memory reason) internal pure returns(bytes memory encoded) {
         encoded = abi.encode(bytes(reason));
+    }
+
+    function becomeArbiter() external returns(bool) {
+        address sender = _msgSender();
+        if(!IEscrowFactory(owner()).isApprovedArbiter(sender, 1)) revert NotApproved();
+        if(sender == data.escrowDetails.arbiter) revert CallerIsTheArbiter();
+        if(data.escrowDetails.arbiter != address(0)) {
+            if(data.disputeInfo.isActive) {
+                if(_now() < data.disputeInfo.raisedAt) revert ArbiterSwapWindowNotOpen();
+            } else {
+                if(data.disputeInfo.resolvedAt > 0) revert EscrowWasResolved();
+            }
+        }
+        
+        emit ArbiterSwapped(data.escrowDetails.arbiter, sender);
+        data.escrowDetails.arbiter = sender;
+
+        return true;
     }
 
     // External Functions
@@ -624,6 +606,10 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
             if (arbiterFee > 0) {
                 token.safeTransfer(data.escrowDetails.arbiter, arbiterFee);
             }
+        }
+
+        if(data.escrowDetails.arbiter != address(0)) {
+            require(IEscrowFactory(owner()).updateArbiterStatus(data.escrowDetails.arbiter), "Update failed");
         }
 
         emit FundsReleased(_recipient, data.escrowDetails.assetToken, netAmount, currentTime);

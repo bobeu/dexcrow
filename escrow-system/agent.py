@@ -16,7 +16,7 @@ chat_proto = Protocol(spec=chat_protocol_spec)
 
 # ASI1 API configuration
 ASI_ONE_API_KEY = os.getenv('ASI_ONE_API_KEY')
-ASI_ONE_URL = "https://api.asi1.ai/v1/chat/completions"
+ASI_ONE_URL = os.getenv('ASI_ONE_URL')
 
 def _text(msg: str) -> ChatMessage:
     """Helper function to create a text chat message."""
