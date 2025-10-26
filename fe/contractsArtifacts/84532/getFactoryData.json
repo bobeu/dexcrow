@@ -1,0 +1,151 @@
+{
+  "contractAddress": "0x9f1E3137Eb94C8fc48E515c5d1F59d307c7C6c03",
+  "functionName": "getFactoryData",
+  "inputCount": 1,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "any",
+          "type": "address"
+        }
+      ],
+      "name": "getFactoryData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "platformFee",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalFees",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalAccounts",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "user",
+                  "type": "address"
+                },
+                {
+                  "internalType": "address",
+                  "name": "tradingAccount",
+                  "type": "address"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "createdAt",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct ICommon.AccountInfo[]",
+              "name": "accounts",
+              "type": "tuple[]"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "platformFee",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "feeDenom",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "creationFee",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "isPythSupported",
+                  "type": "bool"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "address",
+                      "name": "token",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "uint8",
+                      "name": "decimals",
+                      "type": "uint8"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "name",
+                      "type": "bytes"
+                    },
+                    {
+                      "internalType": "bytes",
+                      "name": "symbol",
+                      "type": "bytes"
+                    }
+                  ],
+                  "internalType": "struct ICommon.SupportPaymentAsset",
+                  "name": "supportedPaymentAsset",
+                  "type": "tuple"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "address",
+                      "name": "user",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "address",
+                      "name": "tradingAccount",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "createdAt",
+                      "type": "uint256"
+                    }
+                  ],
+                  "internalType": "struct ICommon.AccountInfo",
+                  "name": "alc",
+                  "type": "tuple"
+                }
+              ],
+              "internalType": "struct ICommon.FactoryVariables",
+              "name": "variables",
+              "type": "tuple"
+            },
+            {
+              "internalType": "bool",
+              "name": "isPaused",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct ITradeFactory.FactoryData",
+          "name": "factoryData",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

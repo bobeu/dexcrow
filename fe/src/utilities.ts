@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { formatEther, Hex, } from "viem";
-import { Address, FilterTransactionDataProps, FilterTransactionReturnType, FunctionName, TransactionData }  from "./types";
-import { getFunctionData } from "../contractData/functionData";
+import { Address, FilterTransactionDataProps, FilterTransactionReturnType, FunctionName, TransactionData }  from "@/lib/types";
+import { getFunctionData } from "./contractData/functionData";
 import BigNumber from "bignumber.js";
 import globalContractData from "../contractsArtifacts/global.json";
 
@@ -91,24 +91,17 @@ export function filterTransactionData({chainId, filter, functionNames = []}: Fil
   const { approvedFunctions, contractAddresses, chainIds } = globalContractData;
   const transactionData : TransactionData[] = [];
   let chainid = chainId || chainIds[0];
+  if(!chainIds.includes(Number(chainId))) chainid = chainIds[0];
   const chainIndex = chainIds.indexOf(chainid);
-  // if(filter && functionNames.length > 0) {
-  //   functionNames.forEach((functionName) => {
-  //     transactionData.push(getFunctionData(functionName, chainIndex));
-  //   })
-  // }
+  if(filter && functionNames.length > 0) {
+    functionNames.forEach((functionName) => {
+      transactionData.push(getFunctionData(functionName, chainIndex));
+    })
+  }
    
   return {
-    // transactionData,
-    // approvedFunctions,
-    // contractAddresses: contractAddresses[chainIndex],
-    transactionData: [],
-    approvedFunctions: [],
-    contractAddresses: {
-      stablecoin: "",
-      FeeReceiver: "",
-      RandoFutures: "",
-      Verifier: ""
-    }
+    transactionData,
+    approvedFunctions,
+    contractAddresses: contractAddresses[chainIndex],
   }
 }

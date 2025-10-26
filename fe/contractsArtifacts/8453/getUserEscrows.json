@@ -1,0 +1,26 @@
+{
+  "contractAddress": "0x0000000000000000000000000000000000000000",
+  "functionName": "getUserEscrows",
+  "inputCount": 1,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserEscrows",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

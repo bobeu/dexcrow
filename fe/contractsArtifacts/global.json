@@ -1,75 +1,101 @@
 {
   "approvedFunctions": [
-    "setCreationFee",
-    "setFeeTo",
-    "setVerifier",
-    "setApprovalFactory",
-    "createCampaign",
-    "getUserCampaigns",
+    "requestToBeAnArbiter",
+    "approveArbiter",
+    "unlock",
+    "getArbiter",
+    "isApprovedArbiter",
+    "readData",
+    "createEscrow",
+    "createEscrowWithDefaultWindow",
     "getData",
-    "hasApproval",
-    "removeApproval",
-    "setApproval",
-    "setFactory",
-    "getFactory",
-    "verify",
-    "verifyByApprove",
-    "toggleUseWalletVerification",
-    "banOrUnbanUser",
-    "getVerificationStatus",
-    "panicWithdraw",
-    "withdraw",
-    "owner"
-  ],
-  "approveTemplateFunctions": [
-    "getData",
-    "addFund",
-    "claimRewardForPOINT",
-    "claimRewardForPOASS",
-    "submitProofOfIntegration",
-    "approveIntegration",
-    "proveAssimilation",
-    "epochSetting",
+    "getAllEscrows",
+    "getUserEscrows",
+    "getTotalEscrows",
+    "getUserEscrowCount",
+    "isValidEscrow",
+    "getArbiterStatus",
+    "updateArbiterStatus",
+    "updateCreationFee",
     "pause",
     "unpause",
-    "owner"
+    "emergencyWithdraw",
+    "createTradingAccount",
+    "setPlatformFee",
+    "setCreationFee",
+    "setSupportedPaymentAsset",
+    "toggleIsPythSupportedNetwork",
+    "withdrawFees",
+    "getVariables",
+    "getFactoryData",
+    "getAccountInfo",
+    "toggleExecution",
+    "allowance",
+    "balanceOf",
+    "transfer",
+    "transferFrom",
+    "symbol",
+    "name",
+    "approve"
   ],
   "chainName": {
-    "42220": "celo",
-    "11142220": "sepolia"
+    "8453": "base",
+    "84532": "base-sepolia"
   },
   "chainIds": [
-    11142220,
-    42220
+    84532,
+    8453
   ],
   "paths": {
-    "42220": [
-      "deployments\\celo\\ApprovalFactory.json",
-      "deployments\\celo\\CampaignFactory.json",
-      "deployments\\celo\\FeeManager.json",
-      "deployments\\celo\\VerifierV2.json"
+    "8453": [
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json"
     ],
-    "11142220": [
-      "deployments\\sepolia\\ApprovalFactory.json",
-      "deployments\\sepolia\\CampaignFactory.json",
-      "deployments\\sepolia\\FeeManager.json",
-      "deployments\\sepolia\\VerifierV2.json"
+    "84532": [
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json"
     ]
   },
   "contractAddresses": [
     {
-      "stablecoin": "",
-      "ApprovalFactory": "0xb3F3a7E5c87CaC34358070e0974D58C79b14D784",
-      "CampaignFactory": "0x152238bc1a9498464CA6ad055C4dcD33D495Be64",
-      "FeeManager": "0x2864bfA7896DA58B0c1E4da982d2747A3de5D2D6",
-      "VerifierV2": "0xd60292815d57e281081559Fd6Bac6b4413b65773"
+      "Arbitrators": "0x9F9f09832942E8A9030C089A589e4Be8AccC190C",
+      "EscrowFactory": "0x97e7eE7951589c6Ab0914510A381d496f1749F56",
+      "TradeFactory": "0x9f1E3137Eb94C8fc48E515c5d1F59d307c7C6c03",
+      "VerseToken": "0xA27d7e9DCFE7D21a0605bE76f1c85F31CB511Ede"
     },
     {
-      "stablecoin": "0x765de816845861e75a25fca122bb6898b8b1282a",
-      "ApprovalFactory": "0x58eeFd82452dbd7A3E6977b5ce17eB58Af9b13Ec",
-      "CampaignFactory": "0x35F97b7CD7961ed9914315664bA99c6F73a989ac",
-      "FeeManager": "0xa3C385ED8DF6A7B71CA79f24c6e51C5E1a2fadd0",
-      "VerifierV2": "0x0B523E504bF03Aa424BCb8e43a0f2071a95eE906"
+      "Arbitrators": "0x0000000000000000000000000000000000000000",
+      "EscrowFactory": "0x0000000000000000000000000000000000000000",
+      "TradeFactory": "0x0000000000000000000000000000000000000000",
+      "VerseToken": "0x0000000000000000000000000000000000000000"
     }
   ]
 }

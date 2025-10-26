@@ -12,7 +12,7 @@ export default function ConnectWalletButton({ className }: { className?: string 
         openChainModal,
         openConnectModal,
         authenticationStatus,
-        mounted,
+        mounted
       }) => {
         const ready = mounted && authenticationStatus !== 'loading';
         const connected =

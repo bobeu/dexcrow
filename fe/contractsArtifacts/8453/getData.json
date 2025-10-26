@@ -1,0 +1,48 @@
+{
+  "contractAddress": "0x0000000000000000000000000000000000000000",
+  "functionName": "getData",
+  "inputCount": 1,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address[]",
+              "name": "allEscrow",
+              "type": "address[]"
+            },
+            {
+              "internalType": "address[]",
+              "name": "userEscrows",
+              "type": "address[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "totalEscrows",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "userEscrowCount",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IEscrowFactory.ReadData",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

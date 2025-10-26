@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Providers from "../contexts/Providers";
+import Web3Providers from "../contexts/Web3Providers";
 import ErrorBoundary from '@/components/errors/ErrorBoundary';
 
 export const metadata: Metadata = {
@@ -36,11 +36,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans">
         <ErrorBoundary>
-          <Providers>
-            <div id="root">
+          <Web3Providers>
+            {/* <div id="root"> */}
+            <main>
               {children}
-            </div>
-          </Providers>
+            </main>
+          </Web3Providers>
         </ErrorBoundary>
       </body>
     </html>

@@ -1,0 +1,26 @@
+{
+  "contractAddress": "0x0000000000000000000000000000000000000000",
+  "functionName": "isValidEscrow",
+  "inputCount": 1,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_escrowAddress",
+          "type": "address"
+        }
+      ],
+      "name": "isValidEscrow",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

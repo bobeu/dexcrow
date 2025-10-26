@@ -1,17 +1,84 @@
 /**
- * Type definitions for the Decentralized Escrow System
+ * Type definitions for the Tradeverse ecosystem
  */
-
-import { Address } from "@/types";
 
 // User Roles
 export type UserRole = 'Buyer' | 'Seller' | 'Arbiter' | 'Viewer' | 'None';
 
 // Application Modes
-export type AppMode = 'create' | 'interact' | 'trading';
+export type AppMode = 'create' | 'interact' | 'trading' | 'admin';
 
 // Trade Types
 export type TradeType = 'crypto' | 'fiat_p2p' | 'cross_chain';
+
+/*eslint-disable */
+
+// Addres type
+export type Address = `0x${string}`;
+
+// Function signature/name types
+export type FunctionName = 
+  "requestToBeAnArbiter" |
+  "approveArbiter" |
+  "unlock" |
+  "getArbiter" |
+  "isApprovedArbiter" |
+  "readData" |
+  "createEscrow" |
+  "createEscrowWithDefaultWindow" |
+  "getData" |
+  "getAllEscrows" |
+  "getUserEscrows" |
+  "getTotalEscrows" |
+  "getUserEscrowCount" |
+  "isValidEscrow" |
+  "getArbiterStatus" |
+  "updateArbiterStatus" |
+  "updateCreationFee" |
+  "pause" |
+  "unpause" |
+  "emergencyWithdraw" |
+  "createTradingAccount" |
+  "setPlatformFee" |
+  "setCreationFee" |
+  "setSupportedPaymentAsset" |
+  "toggleIsPythSupportedNetwork" |
+  "withdrawFees" |
+  "getVariables" |
+  "getFactoryData" |
+  "getAccountInfo" |
+  "toggleExecution" |
+  "allowance" |
+  "balanceOf" |
+  "name" |
+  "transfer" |
+  "transferFrom"|
+  "symbol" |
+  "approve"
+
+export interface FilterTransactionDataProps {
+  chainId: number | undefined;
+  functionNames?: FunctionName[];
+  filter: boolean;
+}
+
+export interface FilterTransactionReturnType {
+  transactionData: TransactionData[];
+  approvedFunctions: string[];
+  contractAddresses: {
+    EscrowFactory: string;
+    Arbitrators: string;
+    TradeFactory: string;
+    VerseToken: string;
+  };
+}
+
+export type TransactionData = {
+  contractAddress: string;
+  inputCount: number;
+  functionName: string;
+  abi: any;
+};
 
 // Escrow States
 export enum EscrowState {
@@ -257,12 +324,12 @@ export interface Arbiter {
   identifier: Address;
 }
 
-export interface ArbitrationReadData {
-  arbiter: Arbiter
-  verseToken: Address;
-  factory: Address;
-  minimumAbiterHolding: bigint;
-}
+// export interface ArbitrationReadData {
+//   arbiter: Arbiter
+//   verseToken: Address;
+//   factory: Address;
+//   minimumAbiterHolding: bigint;
+// }
 
 // Structs
 export interface EscrowDetails {
@@ -290,11 +357,102 @@ export interface DisputeInfo {
   resolvedAt: bigint;
 }
 
-export interface EscrowData {
+export interface EscrowReadData {
   escrowDetails: EscrowDetails;
   disputeInfo: DisputeInfo;
   platformFeePercentage: bigint; // 50 = 0.5%
   arbiterFeePercentage: bigint; // 100 = 1%
   feeDenominator: bigint; // default is 10000
   platformFeeRecipient: Address;
+}
+
+// EscrowFactory Read Data
+export interface EscrowFactoryReadData {
+  allEscrow: Address[];
+  userEscrows: Address[];
+  totalEscrows: bigint;
+  userEscrowCount: bigint;
+  arbitrator: Address;
+  platformFeeRecipient: Address;
+  defaultDisputeWindowHours: bigint;
+  totalEscrowsCreated: bigint;
+  creationFee: bigint;    
+}
+
+// Arbitrators Read Data
+export interface ArbitratorsReadData {
+  arbiters: Arbiter[];
+  verseToken: Address;
+  factory: Address;
+  minimumAbiterHolding: bigint;
+}
+
+// TradeFactory Read Data
+export interface TradeFactoryReadData {
+  owner: Address;
+  platformFee: bigint;
+  totalFees: bigint;
+  totalAccounts: bigint;
+  accounts: AccountInfo[];
+  variables: FactoryVariables;
+  isPaused: boolean;
+}
+
+export interface AccountInfo {
+  user: Address;
+  tradingAccount: Address;
+  createdAt: bigint;
+}
+
+export interface FactoryVariables {
+  creationFee: bigint;
+  feeDenom: bigint;
+  isPythSupported: boolean;
+  platformFee: bigint;
+  supportedPaymentAsset: SupportPaymentAsset;
+  alc: AccountInfo;
+}
+
+export interface SupportPaymentAsset {
+  decimals: number;
+  name: string;
+  symbol: string;
+  token: Address;
+}
+
+// Transaction Modal Types
+export interface TransactionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  transactionHash?: string;
+  status: 'pending' | 'success' | 'error' | 'idle';
+  error?: string;
+  message?: string;
+}
+
+// Transaction Hook Types
+export interface TransactionState {
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error: string | null;
+  hash: string | null;
+}
+
+// Bridge and Execute Types for Escrow Creation
+export interface BridgeAndCreateEscrowParams {
+  token: string;
+  amount: string;
+  toChainId: number;
+  sourceChains?: number[];
+  buyerAddress: string;
+  sellerAddress: string;
+  assetToken: string;
+  assetAmount: string;
+  deadline: number;
+  description: string;
+  disputeWindowHours: number;
+  userAddress: string;
 }
