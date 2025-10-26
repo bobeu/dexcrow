@@ -49,23 +49,6 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
     return `${minutes}m`;
   };
 
-  const getStateIcon = () => {
-    switch (escrowState.currentState) {
-      case EscrowState.AWAITING_DEPOSIT:
-        return <Clock className="w-5 h-5 text-[#ffff00]" />;
-      case EscrowState.AWAITING_FULFILLMENT:
-        return <Shield className="w-5 h-5 text-[#00ff00]" />;
-      case EscrowState.DISPUTE_RAISED:
-        return <AlertTriangle className="w-5 h-5 text-red-500" />;
-      case EscrowState.COMPLETED:
-        return <CheckCircle className="w-5 h-5 text-[#00ff00]" />;
-      case EscrowState.CANCELED:
-        return <XCircle className="w-5 h-5 text-[#666]" />;
-      default:
-        return <Clock className="w-5 h-5 text-[#666]" />;
-    }
-  };
-
   const getStateVariant = () => {
     switch (escrowState.currentState) {
       case EscrowState.AWAITING_DEPOSIT:
@@ -174,7 +157,7 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
 
             <div className="flex items-center justify-between p-3 bg-[#333] rounded-lg border border-[#333] hover:border-[#ffff00] transition-colors">
               <span className="text-sm text-[#ffff00] font-mono">State</span>
-              <Badge variant={getStateVariant()} icon={getStateIcon}>
+              <Badge variant={getStateVariant()}>
                 {getStateName()}
               </Badge>
             </div>
