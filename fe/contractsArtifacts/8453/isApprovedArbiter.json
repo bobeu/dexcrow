@@ -1,0 +1,31 @@
+{
+  "contractAddress": "0x0000000000000000000000000000000000000000",
+  "functionName": "isApprovedArbiter",
+  "inputCount": 2,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "arbiter",
+          "type": "address"
+        },
+        {
+          "internalType": "uint8",
+          "name": "flag",
+          "type": "uint8"
+        }
+      ],
+      "name": "isApprovedArbiter",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}

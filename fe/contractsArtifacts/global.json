@@ -1,0 +1,101 @@
+{
+  "approvedFunctions": [
+    "requestToBeAnArbiter",
+    "approveArbiter",
+    "unlock",
+    "getArbiter",
+    "isApprovedArbiter",
+    "readData",
+    "createEscrow",
+    "createEscrowWithDefaultWindow",
+    "getData",
+    "getAllEscrows",
+    "getUserEscrows",
+    "getTotalEscrows",
+    "getUserEscrowCount",
+    "isValidEscrow",
+    "getArbiterStatus",
+    "updateArbiterStatus",
+    "updateCreationFee",
+    "pause",
+    "unpause",
+    "emergencyWithdraw",
+    "createTradingAccount",
+    "setPlatformFee",
+    "setCreationFee",
+    "setSupportedPaymentAsset",
+    "toggleIsPythSupportedNetwork",
+    "withdrawFees",
+    "getVariables",
+    "getFactoryData",
+    "getAccountInfo",
+    "toggleExecution",
+    "allowance",
+    "balanceOf",
+    "transfer",
+    "transferFrom",
+    "symbol",
+    "name",
+    "approve"
+  ],
+  "chainName": {
+    "8453": "base",
+    "84532": "base-sepolia"
+  },
+  "chainIds": [
+    84532,
+    8453
+  ],
+  "paths": {
+    "8453": [
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json"
+    ],
+    "84532": [
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#Arbitrators.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#EscrowFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#TradeFactory.json",
+      "ignition\\deployments\\chain-84532\\artifacts\\Tradeverse#VerseToken.json"
+    ]
+  },
+  "contractAddresses": [
+    {
+      "Arbitrators": "0x9F9f09832942E8A9030C089A589e4Be8AccC190C",
+      "EscrowFactory": "0x97e7eE7951589c6Ab0914510A381d496f1749F56",
+      "TradeFactory": "0x9f1E3137Eb94C8fc48E515c5d1F59d307c7C6c03",
+      "VerseToken": "0xA27d7e9DCFE7D21a0605bE76f1c85F31CB511Ede"
+    },
+    {
+      "Arbitrators": "0x0000000000000000000000000000000000000000",
+      "EscrowFactory": "0x0000000000000000000000000000000000000000",
+      "TradeFactory": "0x0000000000000000000000000000000000000000",
+      "VerseToken": "0x0000000000000000000000000000000000000000"
+    }
+  ]
+}

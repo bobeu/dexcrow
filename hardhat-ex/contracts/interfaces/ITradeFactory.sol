@@ -44,6 +44,7 @@ interface ITradeFactory is ICommon {
         AccountInfo[] accounts;
         FactoryVariables variables;
         bool isPaused;
+        address pythAddress;
     }
 
     // Events
@@ -73,5 +74,5 @@ interface ITradeFactory is ICommon {
 
     function getVariables(address user) external view returns(FactoryVariables memory _fvs);
 
-    function createTradingAccount(address user, string memory nickName) external returns(address account);
+    function createTradingAccount(address agent, string memory nickName) external returns(address account);
 }

@@ -1,0 +1,53 @@
+{
+  "contractAddress": "0x9F9f09832942E8A9030C089A589e4Be8AccC190C",
+  "functionName": "getArbiter",
+  "inputCount": 1,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "arbiterId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getArbiter",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "id",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lockedBalance",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isApproved",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastSeen",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "identifier",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct IArbitrators.Arbiter",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

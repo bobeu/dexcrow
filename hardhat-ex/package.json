@@ -8,10 +8,20 @@
     "clean": "rm -rf ./dist",
     "compile": "hardhat compile",
     "build": "yarn hardhat build",
-    "test:solidity": "yarn hardhat test solidity --coverage"
+    "sync:data": "node sync-data.js",
+    "test:solidity": "yarn hardhat test solidity",
+    "start:node": "yarn hardhat node",
+    "add-base-alc": "yarn hardhat keystore set PRIVATE_farc --network base",
+    "add-basesepolia-alc": "yarn hardhat keystore set PRIVATE_0xD7c --network baseSepolia",
+    "deploy-counter": "yarn hardhat ignition deploy --network localhost ignition/modules/Counter.ts",
+    "deploy-tradeverse": "yarn hardhat ignition deploy --network localhost ignition/modules/Tradeverse.ts",
+    "deploy-tradeverse-basesepolia": "yarn hardhat ignition deploy --network baseSepolia ignition/modules/Tradeverse.ts",
+    "deploy-tradeverse-base": "yarn hardhat ignition deploy --network base ignition/modules/Tradeverse.ts",
+    "reset": "yarn hardhat ignition deploy --network localhost --reset ignition/modules/Tradeverse.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",
+    "@nomicfoundation/hardhat-ignition-viem": "^3.0.3",
     "@nomicfoundation/hardhat-node-test-runner": "^3.0.3",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
@@ -23,9 +33,15 @@
     "viem": "^2.38.0"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-keystore": "^3.0.2",
+    "@nomicfoundation/hardhat-network-helpers": "^3.0.1",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-verify": "^3.0.4",
+    "@nomicfoundation/hardhat-viem-assertions": "^3.0.2",
+    "@nomiclabs/hardhat-web3": "^2.1.0",
     "@openzeppelin/contracts": "^5.4.0",
-    "@pythnetwork/pyth-sdk-solidity": "^0.1.0",
-    "@wormhole-foundation/wormhole": "^0.1.0",
-    "merkle-tree": "^1.0.0"
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
+    "dotenv": "^17.2.3",
+    "hardhat-deploy": "^1.0.4"
   }
 }

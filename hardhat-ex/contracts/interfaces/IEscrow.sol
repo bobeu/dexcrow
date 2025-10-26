@@ -7,7 +7,50 @@ pragma solidity 0.8.30;
  * @author Bobeu - https://github.com/bobeu
  */
 interface IEscrow {
+        // Custom Errors
+    error InvalidBuyerAddress();
+    error InvalidSellerAddress();
+    error InvalidArbiterAddress();
+    error AssetAmountMustBeGreaterThanZero();
+    error DeadlineMustBeInTheFuture();
+    error DisputeWindowMustBeGreaterThanZero();
+    error InvalidPlatformFeeRecipient();
+    error OnlyBuyerOrSellerCanCall();
+    error OnlyBuyerCanCall();
+    error OnlySellerCanCall();
+    error OnlyArbiterCanCall();
+    error OnlyAuthorizedAgentsCanCall();
+    error InvalidEscrowState();
+    error EscrowHasExpired();
+    error EscrowHasNotExpired();
+    error IncorrectETHAmount();
+    error ETHNotAcceptedForERC20Escrow();
+    error InsufficientTokenBalance();
+    error InsufficientTokenAllowance();
+    error OnlyBuyerOrArbiterCanReleaseFunds();
+    error OnlyBuyerOrArbiterCanRefundFunds();
+    error DeadlineNotReached();
+    error DisputeReasonCannotBeEmpty();
+    error NoActiveDispute();
+    error ReasoningCannotBeEmpty();
+    error InvalidStateForFundRelease();
+    error TransferToRecipientFailed();
+    error TransferToPlatformFailed();
+    error TransferToArbiterFailed();
+    error InvalidAgentAddress();
+    error ContractMustBePaused();
+    error EmergencyWithdrawFailed();
+    error ArbiterSwapWindowNotOpen();
+    error EscrowWasResolved();
+    error NotApproved();
+    error CallerIsTheArbiter();
+
     // Events
+    event ArbiterSwapped(
+        address indexed oldArbiter,
+        address indexed newArbiter
+    );
+
     event EscrowCreated(
         address indexed buyer,
         address indexed seller,

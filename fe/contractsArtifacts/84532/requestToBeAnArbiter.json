@@ -1,0 +1,368 @@
+{
+  "contractAddress": "0x9F9f09832942E8A9030C089A589e4Be8AccC190C",
+  "functionName": "requestToBeAnArbiter",
+  "inputCount": 0,
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "ArbiterIsEngaged",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "AribterAlreadyApproved",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CooldownMode",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "EnforcedPause",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ExpectedPause",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FactoryNotSet",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MinimumAbiterHoldingExceedAllowance",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NoBalance",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NoRequestFound",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotApproved",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "Requested",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "SafeERC20FailedOperation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "VerseTokenNotSet",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "Unpaused",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "arbiter",
+          "type": "address"
+        }
+      ],
+      "name": "approveArbiter",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "arbiterId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getArbiter",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "id",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lockedBalance",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "isApproved",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "lastSeen",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "identifier",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct IArbitrators.Arbiter",
+          "name": "_result",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "arbiter",
+          "type": "address"
+        }
+      ],
+      "name": "isApprovedArbiter",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "readData",
+      "outputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "bytes32",
+                  "name": "id",
+                  "type": "bytes32"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "lockedBalance",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "bool",
+                  "name": "isApproved",
+                  "type": "bool"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "lastSeen",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address",
+                  "name": "identifier",
+                  "type": "address"
+                }
+              ],
+              "internalType": "struct IArbitrators.Arbiter[]",
+              "name": "arbiters",
+              "type": "tuple[]"
+            },
+            {
+              "internalType": "contract IERC20",
+              "name": "verseToken",
+              "type": "address"
+            },
+            {
+              "internalType": "contract IEscrowFactory",
+              "name": "factory",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "minimumAbiterHolding",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IArbitrators.ReadData",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "requestToBeAnArbiter",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unlock",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}

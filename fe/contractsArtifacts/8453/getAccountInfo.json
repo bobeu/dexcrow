@@ -1,0 +1,43 @@
+{
+  "contractAddress": "0x0000000000000000000000000000000000000000",
+  "functionName": "getAccountInfo",
+  "inputCount": 1,
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "getAccountInfo",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tradingAccount",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "createdAt",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct ICommon.AccountInfo",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

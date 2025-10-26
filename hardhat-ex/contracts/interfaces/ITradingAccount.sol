@@ -11,7 +11,6 @@ import { ICommon } from "./ICommon.sol";
  */
 interface ITradingAccount is ICommon {
         // ============ CUSTOM ERRORS ============
-    error OnlyFactory();
     error NoWithdrawalRequest();
     error WithdrawalAlreadyProcessed();
     error CooldownNotPassed();
@@ -71,17 +70,16 @@ interface ITradingAccount is ICommon {
         uint256 pricePerUnit;
         uint256 createdAt;
         uint256 expiresAt;
-        AssetDetail asseetInfo;
+        AssetDetail assetInfo;
         OrderStatus status;
+        bytes32 orderId;
     }
 
     struct AccountData {
         address owner;
-        address tradeFactory;
         OrderDetails[] orders;
         uint256 successfulOrders;
         uint256 cancelledOrders;
-        uint256 activeOrderCount;
         SellerInfo sellerInfo;
     }
 
@@ -133,11 +131,12 @@ interface ITradingAccount is ICommon {
 
     // Functions
     function createOrder(
-        bytes32 tokenAddress,
+        address tokenAddress,
         uint256 amount,
         uint256 price,
-        uint256 expirationHours
-    ) external payable returns (bytes32 orderId);
+        uint256 expirationHours,
+        bytes32 _priceFeedId
+    ) external payable returns(bool);
 
     function cancelOrder(bytes32 orderId) external returns(bool);
 

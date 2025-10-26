@@ -7,14 +7,16 @@ import { ITradeFactory } from "../../interfaces/ITradeFactory.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Approved } from "../../Approved.sol";
+import { PythPriceFeed } from "../../oracles/PythPriceFeed.sol";
 
 /**
  * @title TradingAccount
  * @dev Individual trading account contract for each user
  * @author Bobeu - https://github.com/bobeu
  */
-contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
+contract TradingAccount is ITradingAccount, PythPriceFeed, ReentrancyGuard, Approved {
     using SafeERC20 for IERC20;
 
     // ============ CUSTOM ERRORS ============
@@ -24,9 +26,9 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
     // ============ STATE VARIABLES ============
 
     /**
-     * @dev Address of the trade factory contract
+    * @dev Trade factory contract
      */
-    address private immutable _tradeFactory;
+    ITradeFactory private immutable tradeFactory;
 
     /**
      * @dev Mapping of order IDs to their respective index in the order array
@@ -71,16 +73,6 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      */
     OrderDetails[] private orders;
 
-    // ============ MODIFIERS ============
-
-    /**
-     * @dev Ensures cooldown period has passed
-     */
-    modifier onlyFactory {
-        if(_msgSender() != _tradeFactory) revert OnlyFactory();
-        _;
-    }
-
     // ============ CONSTRUCTOR ============
 
     /**
@@ -94,18 +86,18 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         address _seller, 
         address agent, 
         address controller, 
-        string memory nickname
-    ) Approved(controller, _seller) 
+        string memory nickname,
+        address _pythAddress
+    ) 
+        Approved(controller, _seller) 
+        PythPriceFeed(_pythAddress, _seller)
     {
-        if(agent != address(0)) _setPermission(agent, true);
-        info.nickName = abi.encode(bytes(nickname));
+        if(agent != address(0) && agent != _seller) _setPermission(agent, true);
+        info.nickName = abi.encode(nickname);
         info.id = _seller;
         info.agentId = keccak256(abi.encodePacked(agent, _now(), nickname));
-        _tradeFactory = _msgSender();
+        tradeFactory = ITradeFactory(_msgSender());
     }
-
-    // Sending ETH via this method activates sell order for native asset
-    receive() external payable {}
 
     // ============ EXTERNAL FUNCTIONS ============
 
@@ -117,6 +109,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
 
     // Update nickName
     function toggleTokenVerificationStatus(address token) external onlyApproved returns(bool) {
+        if(token == address(0)) revert InvalidTokenOut();
         bool status = isVerified[token];
         isVerified[token] = !status;
         return true;
@@ -132,19 +125,20 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @notice Orders are free up to 24 hours. Subsequent extra hours are charged based on the creating fee
      */
     function createOrder(
-        bytes32 tokenAddress,
+        address tokenAddress,
         uint256 amount,
         uint256 price,
-        uint256 expirationHours
-    ) external payable onlyApproved nonReentrant whenNotPaused returns(bytes32 orderId) {
+        uint256 expirationHours,
+        bytes32 _priceFeedId
+    ) external payable onlyApproved nonReentrant whenNotPaused returns(bool) {
         unchecked {
             if(amount == 0) revert InvalidAmount();
             uint expiration = expirationHours * 1 hours;
-            FactoryVariables memory fv = ITradeFactory(owner()).getVariables(_msgSender());
+            FactoryVariables memory fv = tradeFactory.getVariables(_msgSender());
             if(expirationHours == 0) {
                 expiration = 24 hours;
             } else {
-                if(expiration > 24) {
+                if(expirationHours > 24) {
                     uint listDurationFee = fv.creationFee * (expiration - 24);
                     if(listDurationFee > 0) {
                         if(msg.value < listDurationFee) {
@@ -164,7 +158,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
                 if(price == 0) revert PriceNotProvided();
             }
             // Generate unique order ID
-            orderId = keccak256(abi.encodePacked(
+            bytes32 orderId = keccak256(abi.encodePacked(
                 _now(),
                 info.id,
                 tokenAddress,
@@ -172,22 +166,29 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
                 orders.length
             ));
             uint currentTime = _now();
-            
+            if(price == 0) _updatePriceFeedId(orderId, _priceFeedId); 
+
             // Create order details
             uint index = orders.length;
             orderIndex[orderId] = OrderIndex(index, true);
             orders.push(
                 OrderDetails({
+                    orderId: orderId,
                     amount: amount,
                     pricePerUnit: price,
                     createdAt: currentTime,
                     expiresAt: currentTime + expiration,
-                    asseetInfo: _getAssetInfo(address(uint160(uint256(tokenAddress))), amount),
+                    assetInfo: _getAssetInfo(tokenAddress, amount),
                     status: OrderStatus.ACTIVE
                 })
             );
 
-            emit OrderCreated(orderId, address(uint160(uint256(tokenAddress))), index, amount, price, price == 0);
+            // Lock the funds for this order
+            _balances[tokenAddress] -= amount;
+            _lockedBalances[tokenAddress] += amount;
+
+            emit OrderCreated(orderId, tokenAddress, index, amount, price, price == 0);
+            return true;
         }
     }
 
@@ -195,8 +196,8 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         OrderIndex memory oi = orderIndex[orderId];
         if(!oi.hasIndex) revert InvalidOrderId();
         orderDetails = orders[oi.index];
-        if(orderDetails.amount == 0) revert OrderNotFound();
         if(orderDetails.status != OrderStatus.ACTIVE) revert OrderNotActive();
+        if(orderDetails.amount == 0) revert OrderNotFound();
     }
 
     /**
@@ -210,7 +211,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         _cancelledOrders++;
 
         // Unlock the balance
-        address tokenAddr = orderDetails.asseetInfo.tokenAddress;
+        address tokenAddr = orderDetails.assetInfo.tokenAddress;
         unchecked {
             uint256 lockedBal = _lockedBalances[tokenAddr];
             if(lockedBal >= orderDetails.amount) _lockedBalances[tokenAddr] -= orderDetails.amount;
@@ -230,18 +231,22 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @param token Token address (address(0) for native ETH)
      * @notice Seller can deposit. Anyone can also deposit on their behalf
      */
-    function deposit(address token) external payable nonReentrant whenNotPaused returns(bool) {
-        (address from, uint amount) = (info.id, msg.value);
+    function deposit(address token) external payable onlyApproved nonReentrant whenNotPaused returns(bool) {
+        address from = info.id;
+        uint amount = msg.value;
+        
         unchecked {
-            _balances[token] += amount;
             if(token != address(0)) {
                 IERC20 tk = IERC20(token);
                 uint256 allowanceFromSeller = tk.allowance(from, address(this));
                 uint256 allowanceFromSender = tk.allowance(_msgSender(), address(this));
                 (from, amount) = allowanceFromSeller > 0? (from, allowanceFromSeller) : (_msgSender(), allowanceFromSender);
-                tk.safeTransferFrom(from, address(this), amount);              
+                if(amount == 0) revert InvalidAmount();
+                tk.safeTransferFrom(from, address(this), amount);
+                _balances[token] += amount;
             } else {
                 if(amount == 0) revert InvalidAmount();
+                _balances[token] += amount;
             }
         }
 
@@ -254,7 +259,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
      * @param token Token address to withdraw
      * @param amount Amount to withdraw
      */
-    function withdrawal(address token, uint256 amount) 
+    function withdraw(address token, uint256 amount) 
         external 
         onlyApproved
         nonReentrant 
@@ -306,7 +311,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
                 if(tk.allowance(_msgSender(), address(this)) < volume) revert TrickyMove();
                 tk.safeTransferFrom(_msgSender(), address(this), volume);
                 if(tokenOut == address(0)) {
-                    revert InvalidTokenOut();
+                    revert InvalidPaymentAsset();
                 } else {
                     tk = IERC20(tokenOut);
                     if(_balances[tokenOut] < totalCost) revert InsufficientBalForRequestedToken();
@@ -371,7 +376,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
 
         // Unlock the balance
         uint amountTaken = amount;
-        address tokenAddr = orderDetails.asseetInfo.tokenAddress;
+        address tokenAddr = orderDetails.assetInfo.tokenAddress;
         unchecked {
             if(amount >= orderDetails.amount) {
                 amountTaken = orderDetails.amount;
@@ -386,6 +391,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         uint totalCost;
         if(orderDetails.pricePerUnit == 0) {
             // Use price oracle
+            totalCost = amount * uint(getPriceFor(orderId));
         } else {
             totalCost = orderDetails.pricePerUnit * amountTaken; // Price should be in decimals form
         }
@@ -411,25 +417,30 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
 
     // ============ VIEW FUNCTIONS ============
 
-    function _getAssetInfo(address tokenAddr, uint256 amount) internal returns(AssetDetail memory _info) {
+    function _getAssetInfo(address tokenAddr, uint256 amount) internal view returns(AssetDetail memory _info) {
         if(_balances[tokenAddr] < amount) {
             revert MinimumFundingRequired();
         }
-        _balances[tokenAddr] -= amount;
-        _lockedBalances[tokenAddr] += amount;
         if(tokenAddr != address(0)) {
             IERC20 tk = IERC20(tokenAddr);
+            // Check that the trading account has the tokens
             if(tk.balanceOf(address(this)) == 0) {
+                // Check that the seller has approved the trading account to spend the tokens
                 if(tk.allowance(info.id, address(this)) == 0) {
                     revert NoFundDetected();
-                } else {
-                    tk.safeTransferFrom(info.id, address(this), amount);
                 }
             }
             _info =  AssetDetail(
-                18, // Default to 18 decimals for ERC20 tokens
-                "Token", // Default name
-                "TKN", // Default symbol
+                IERC20Metadata(tokenAddr).decimals(), // Default to 18 decimals for ERC20 tokens
+                abi.encode(IERC20Metadata(tokenAddr).name()), // Default name
+                abi.encode(IERC20Metadata(tokenAddr).symbol()), // Default symbol
+                tokenAddr 
+            );
+        } else {
+            _info =  AssetDetail(
+                18, // Default to 18 decimals for native ETH
+                "Ethereum", // Default name
+                "ETH", // Default symbol
                 tokenAddr 
             );
         }
@@ -447,11 +458,9 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
     function getAccountData() external view override returns (AccountData memory accountData) {
         accountData = AccountData({
             owner: info.id,
-            tradeFactory: _tradeFactory,
             orders: orders,
             successfulOrders: _successfulOrders,
             cancelledOrders: _cancelledOrders,
-            activeOrderCount: orders.length,
             sellerInfo: info
         });
         return accountData;
@@ -481,11 +490,17 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
 
     /**
      * @dev Pause execution 
-     * @param stop : Flag that dictates whether to stop execution or not
      * Only the factory contract can pause the Trading account
      */
-    function deactivateAccount(bool stop) external onlyOwner returns (bool){
-        stop? _pause() : _unpause();
-        return true;
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    /**
+     * @dev Resume execution 
+     * Only the factory contract can pause the Trading account
+     */
+    function unpause() public onlyOwner {
+        _unpause();
     }
 }
