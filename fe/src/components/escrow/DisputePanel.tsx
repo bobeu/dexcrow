@@ -120,42 +120,7 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
         </div>
       </InfoCard>
 
-      {/* Resolution (if resolved) */}
-      {escrowState.disputeResolution && (
-        <InfoCard title="Resolution Decision" icon={FileText} borderColor="green">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-[#ffff00] font-mono">Decision:</span>
-              <div className="flex items-center space-x-2">
-                {escrowState.disputeResolution.releaseFunds ? (
-                  <CheckCircle className="w-4 h-4 text-[#00ff00]" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-red-500" />
-                )}
-                <span className={`text-sm font-mono ${
-                  escrowState.disputeResolution.releaseFunds ? 'text-[#00ff00]' : 'text-red-500'
-                }`}>
-                  {escrowState.disputeResolution.releaseFunds ? 'Release Funds' : 'Refund Funds'}
-                </span>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-[#ffff00] font-mono">Resolution Time:</span>
-              <span className="text-sm text-white font-mono">
-                {formatDate(escrowState.disputeResolution.timestamp)}
-              </span>
-            </div>
-            {escrowState.disputeResolution.reasoning && (
-              <div>
-                <span className="text-sm text-[#ffff00] font-mono block mb-1">Reasoning:</span>
-                <p className="text-sm text-white font-mono bg-[#333] p-2 rounded">
-                  {escrowState.disputeResolution.reasoning}
-                </p>
-              </div>
-            )}
-          </div>
-        </InfoCard>
-      )}
+      {/* Resolution section removed - not available in EscrowContractState */}
 
       {/* Disputer Information */}
       <InfoCard title="Disputer Information" icon={User} borderColor="red">

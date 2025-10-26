@@ -1,14 +1,14 @@
 # Decentralized Escrow System
 
-A secure, trustless, and decentralized escrow system built with Next.js, Wagmi, and RainbowKit.
+A secure, trustless, and decentralized escrow and trading system built with Next.js, Wagmi, and RainbowKit.
 
 ## Features
 
-- 🔒 **Secure Escrow**: Smart contract-based escrow system
-- 🌐 **Multi-Chain Support**: Works across multiple blockchain networks
-- ⚖️ **Decentralized Arbitration**: Built-in dispute resolution
-- 🚀 **Fast Settlement**: Quick transaction processing
-- 💰 **Trading Interface**: Cross-chain trading capabilities
+- **Secure Escrow**: Smart contract-based escrow system
+- **Multi-Chain Support**: Works across multiple blockchain networks
+- **Decentralized Arbitration**: Built-in dispute resolution
+- **Fast Settlement**: Quick transaction processing
+- **Trading Interface**: Cross-chain trading capabilities
 
 ## Getting Started
 

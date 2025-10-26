@@ -2,13 +2,13 @@
 
 TradeVerse is a comprehensive decentralized trading and escrow platform built on Base blockchain, integrating advanced technologies to provide seamless cross-chain trading, secure escrow services, and real-time price feeds. The platform enables users to trade cryptocurrencies and create escrow contracts with built-in dispute resolution mechanisms.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The project consists of two main components:
 - **Smart Contracts** (`hardhat-ex/`): Solidity contracts deployed on Base blockchain
 - **Frontend Application** (`fe/`): Next.js React application with Web3 integration
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 ### Hardhat Development Framework
 
@@ -108,7 +108,7 @@ contract TradingAccount is PythPriceFeed {
 - **Cross-Chain Consistency**: Same price feeds across all supported networks
 - **Cost Effective**: Efficient price update mechanism reduces oracle costs
 
-## 🚀 Key Features
+## Key Features
 
 ### Escrow System
 - **Multi-Party Escrow**: Secure transactions between buyers and sellers
@@ -128,7 +128,7 @@ contract TradingAccount is PythPriceFeed {
 - **Reputation System**: Track arbitrator performance and reliability
 - **Automated Selection**: Smart contract-based arbitrator assignment
 
-## 🔧 Development Setup
+## Development Setup
 
 ### Prerequisites
 - Node.js 18+
@@ -154,46 +154,46 @@ yarn deploy
 cd fe && yarn dev
 ```
 
-## 📊 Contract Addresses (Base Sepolia)
+## Contract Addresses (Base Sepolia)
 
 - **TradeFactory**: `0x9f1E3137Eb94C8fc48E515c5d1F59d307c7C6c03`
 - **EscrowFactory**: `0x97e7eE7951589c6Ab0914510A381d496f1749F56`
 - **Arbitrators**: `0x9F9f09832942E8A9030C089A589e4Be8AccC190C`
 - **Pyth Price Feed**: `0x8250f4aF4B972684F7b336503E2D6dFeDeB1487a`
 
-## 🧪 Testing
+## Testing
 
 The project includes comprehensive test suites:
 - **Solidity Tests**: Foundry-style tests for smart contracts
 - **TypeScript Tests**: Hardhat Node.js test runner for integration tests
 - **Frontend Tests**: React component testing with Jest
 
-## 🌐 Network Support
+## Network Support
 
 - **Base Mainnet** (8453): Primary deployment
 - **Base Sepolia** (84532): Testnet deployment
 - **Ethereum Mainnet** (1): Future deployment
 - **Sepolia** (11155111): Testnet deployment
 
-## 📈 Performance Metrics
+## Performance Metrics
 
 - **Gas Optimization**: 15-20% reduction through compiler optimizations
 - **Cross-Chain Efficiency**: 30% cost reduction via Avail Nexus
 - **Price Update Latency**: Sub-second updates via Pyth Network
 - **Transaction Success Rate**: 99.9% through robust error handling
 
-## 🔒 Security Features
+## Security Features
 
 - **Reentrancy Protection**: OpenZeppelin ReentrancyGuard
 - **Access Control**: Role-based permissions and ownership patterns
 - **Input Validation**: Comprehensive parameter validation
 - **Emergency Mechanisms**: Pause/unpause functionality for critical situations
 
-## 📝 License
+## License
 
 MIT License - see LICENSE file for details
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -201,7 +201,7 @@ MIT License - see LICENSE file for details
 4. Push to the branch
 5. Create a Pull Request
 
-## 📞 Support
+## Support
 
 For technical support or questions, please open an issue in the repository or contact the development team.
 
