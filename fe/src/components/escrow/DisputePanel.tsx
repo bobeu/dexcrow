@@ -1,5 +1,5 @@
 import React from 'react';
-import { EscrowContractState, UserRole } from '@/lib/types';
+import { EscrowContractState, UserRole, EscrowState } from '@/lib/types';
 import { 
   AlertTriangle, 
   Gavel, 
@@ -26,15 +26,16 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
   };
 
   const getDisputeStatusVariant = () => {
-    if (escrowState.disputeResolution) {
-      return escrowState.disputeResolution.releaseFunds ? 'success' : 'danger';
+    // Check if there's dispute info available
+    if (escrowState.currentState === EscrowState.DISPUTE_RAISED) {
+      return 'danger';
     }
     return 'warning';
   };
 
   const getDisputeStatusText = () => {
-    if (escrowState.disputeResolution) {
-      return escrowState.disputeResolution.releaseFunds ? 'Resolved - Funds Released' : 'Resolved - Funds Refunded';
+    if (escrowState.currentState === EscrowState.DISPUTE_RAISED) {
+      return 'Dispute Raised - Awaiting Resolution';
     }
     return 'Pending Resolution';
   };
@@ -83,19 +84,19 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Dispute ID:</span>
             <span className="text-sm text-white font-mono">
-              #{escrowState.disputeId || 'N/A'}
+              #{escrowState.contractAddress?.slice(-8) || 'N/A'}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Raised By:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputer ? formatAddress(escrowState.disputer) : 'N/A'}
+              {escrowState.seller ? formatAddress(escrowState.seller) : 'N/A'}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Reason:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputeReason || 'N/A'}
+              {'Dispute raised - awaiting resolution'}
             </span>
           </div>
         </div>
@@ -113,7 +114,7 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Assignment Time:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputeTimestamp ? formatDate(escrowState.disputeTimestamp) : 'N/A'}
+              {formatDate(escrowState.deadline)}
             </span>
           </div>
         </div>
