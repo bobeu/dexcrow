@@ -1,5 +1,5 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
-import { namedAccounts } from "../../parameters";
+import { namedAccounts, getParameters } from "../../parameters";
 
 /**
  * @title Tradeverse
@@ -22,6 +22,8 @@ export default buildModule("Tradeverse", (m) => {
   // const pythPriceFeed = m.contract("PythPriceFeed", [deployer], {
   //   id: "PythPriceFeed"
   // });
+
+  const { name, symbol, initialSupply, maxSupply, initialSupplyReceiver } = getParameters(84532);
   
   // Deploy TradeFactory
   const arbitrator = m.contract("Arbitrators", [], {
@@ -37,10 +39,16 @@ export default buildModule("Tradeverse", (m) => {
   const escrowFactory = m.contract("EscrowFactory", [namedAccounts.feeRecipient, arbitrator], {
     id: "EscrowFactory"
   });
-  
+
+  // console.log("Arbitrator:", arbitrator);
+  const verseToken = m.contract("VerseToken", [maxSupply, initialSupply, name, symbol, initialSupplyReceiver[84532]], {
+    id: "VerseToken"
+  });
+
   return {
     tradeFactory,
     escrowFactory,
     arbitrator,
+    verseToken
   };
 });

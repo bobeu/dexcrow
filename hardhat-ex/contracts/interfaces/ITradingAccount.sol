@@ -134,7 +134,8 @@ interface ITradingAccount is ICommon {
         address tokenAddress,
         uint256 amount,
         uint256 price,
-        uint256 expirationHours
+        uint256 expirationHours,
+        bytes32 _priceFeedId
     ) external payable returns(bool);
 
     function cancelOrder(bytes32 orderId) external returns(bool);

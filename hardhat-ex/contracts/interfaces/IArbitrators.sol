@@ -32,7 +32,10 @@ interface IArbitrators {
 
     function getArbiter(bytes32 arbiterId) external view returns(Arbiter memory);
     function requestToBeAnArbiter() external returns(bool);
+    function approveArbiter(address arbiter) external returns(bool);
+    function unlock() external returns(bool);
     function isApprovedArbiter(address arbiter) external view returns(bool);
+    function readData() external view returns(ReadData memory);
 
     error VerseTokenNotSet();
     error Requested();

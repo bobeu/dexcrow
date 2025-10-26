@@ -115,6 +115,18 @@ contract Arbitrators is IArbitrators, Ownable, Pausable {
         return arbiters[req.index].isApproved;
     }
 
+    function setVerseToken(address _verseToken) external onlyOwner {
+        verseToken = IERC20(_verseToken);
+    }
+    
+    function setFactory(address _factory) external onlyOwner {
+        factory = IEscrowFactory(_factory);
+    }
+    
+    function setMinimumAbiterHolding(uint256 _minimumHolding) external onlyOwner {
+        minimumAbiterHolding = _minimumHolding;
+    }
+    
     function readData() external view returns(ReadData memory) {
         return ReadData({
             arbiters: arbiters,

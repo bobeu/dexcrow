@@ -56,7 +56,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
     agent = accounts[5];
 
     // Deploy mock ERC20 token
-    mockToken = await viem.deployContract("MockERC20", [parseEther("1000")]);
+    mockToken = await viem.deployContract("MockERC20", [parseEther("1000"), "Mock Token", "MOCK"]);
   });
 
   beforeEach(async function () {
@@ -134,25 +134,24 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
       );
     });
 
-    it("Should revert with invalid arbiter address", async function () {
+    it("Should allow zero address as arbiter (can be set later)", async function () {
       const deadline = BigInt(Math.floor(Date.now() / 1000) + DEADLINE);
       
-      await assert.rejects(
-        async () => {
-          await viem.deployContract("Escrow", [
-            buyer,
-            seller,
-            zeroAddress, // Invalid arbiter
-            zeroAddress,
-            ASSET_AMOUNT,
-            deadline,
-            DESCRIPTION,
-            BigInt(DISPUTE_WINDOW),
-            platformFeeRecipient
-          ]);
-        },
-        /InvalidArbiterAddress/
-      );
+      // Should not revert - zero address is allowed as arbiter
+      const escrow = await viem.deployContract("Escrow", [
+        buyer,
+        seller,
+        zeroAddress, // Zero address is allowed as arbiter
+        zeroAddress,
+        ASSET_AMOUNT,
+        deadline,
+        DESCRIPTION,
+        BigInt(DISPUTE_WINDOW),
+        platformFeeRecipient
+      ]);
+      
+      // Verify the escrow was deployed successfully
+      assert.ok(escrow.address);
     });
 
     it("Should revert with zero asset amount", async function () {
@@ -376,9 +375,11 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
     it("Should allow arbiter to refund funds", async function () {
       const buyerInitialBalance = await publicClient.getBalance({ address: buyer });
       
-      await escrow.write.refundFunds({
-        account: arbiter
-      });
+      // First, the arbiter needs to become the arbiter
+      await escrow.write.becomeArbiter();
+      
+      // Then refund funds
+      await escrow.write.refundFunds();
 
       const escrowData = await escrow.read.getEscrowData();
       assert.equal(escrowData.escrowDetails.state, 4); // CANCELED
@@ -457,9 +458,10 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
       const sellerInitialBalance = await publicClient.getBalance({ address: seller });
       const reasoning = "Seller fulfilled their obligations";
       
-      await escrow.write.resolveDispute([true, reasoning], {
-        account: arbiter
-      });
+      // First, the arbiter needs to become the arbiter
+      await escrow.write.becomeArbiter();
+      
+      await escrow.write.resolveDispute([true, reasoning]);
 
       const escrowData = await escrow.read.getEscrowData();
       assert.equal(escrowData.escrowDetails.state, 3); // COMPLETED
@@ -474,9 +476,10 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
       const buyerInitialBalance = await publicClient.getBalance({ address: buyer });
       const reasoning = "Buyer's claim is valid";
       
-      await escrow.write.resolveDispute([false, reasoning], {
-        account: arbiter
-      });
+      // First, the arbiter needs to become the arbiter
+      await escrow.write.becomeArbiter();
+      
+      await escrow.write.resolveDispute([false, reasoning]);
 
       const escrowData = await escrow.read.getEscrowData();
       assert.equal(escrowData.escrowDetails.state, 4); // CANCELED
@@ -578,9 +581,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
       
       const sellerInitialBalance = await publicClient.getBalance({ address: seller });
       
-      await escrow.write.agentConfirmFulfillment({
-        account: agent
-      });
+      await escrow.write.agentConfirmFulfillment();
 
       const escrowData = await escrow.read.getEscrowData();
       assert.equal(escrowData.escrowDetails.state, 3); // COMPLETED
@@ -598,9 +599,7 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
       
       const reasoning = "Agent decision";
       
-      await escrow.write.agentResolveDispute([true, reasoning], {
-        account: agent
-      });
+      await escrow.write.agentResolveDispute([true, reasoning]);
 
       const escrowData = await escrow.read.getEscrowData();
       assert.equal(escrowData.escrowDetails.state, 3); // COMPLETED
@@ -725,10 +724,11 @@ describe("Escrow Contract - Simplified TypeScript Tests", async function () {
       // Raise first dispute
       await escrow.write.raiseDispute(["First dispute"]);
       
+      // First, the arbiter needs to become the arbiter
+      await escrow.write.becomeArbiter();
+      
       // Resolve first dispute
-      await escrow.write.resolveDispute([true, "First resolution"], {
-        account: arbiter
-      });
+      await escrow.write.resolveDispute([true, "First resolution"]);
 
       // Should not be able to raise another dispute after resolution
       await assert.rejects(

@@ -1,8 +1,7 @@
-/* Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json */
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "node16",
+    "module": "commonjs",
     "outDir": "dist",
     "declaration": true,
     "strict": true,
@@ -12,14 +11,15 @@
     "resolveJsonModule": true,
     "rootDirs": ["arch/test"],
     "useUnknownInCatchVariables": false,
-    "moduleResolution": "node16",
     "noImplicitAny": false
   },
   "include": ["./typechain", "arch/test", "./deploy", "./types"],
   "exclude": ["./node_modules/*"],
-  "files": ["./hardhat.config.ts"]
+  // "files": ["./hardhat.config.ts"]
 }
 
+
+/* Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e10 12b992338f28/bases/node22.json */
 // "compilerOptions": {
 //   "lib": ["es2023"],
 //   "module": "node16",

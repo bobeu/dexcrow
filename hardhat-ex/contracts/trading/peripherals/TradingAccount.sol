@@ -9,13 +9,14 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { Approved } from "../../Approved.sol";
+import { PythPriceFeed } from "../../oracles/PythPriceFeed.sol";
 
 /**
  * @title TradingAccount
  * @dev Individual trading account contract for each user
  * @author Bobeu - https://github.com/bobeu
  */
-contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
+contract TradingAccount is ITradingAccount, PythPriceFeed, ReentrancyGuard, Approved {
     using SafeERC20 for IERC20;
 
     // ============ CUSTOM ERRORS ============
@@ -85,8 +86,11 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         address _seller, 
         address agent, 
         address controller, 
-        string memory nickname
-    ) Approved(controller, _seller) 
+        string memory nickname,
+        address _pythAddress
+    ) 
+        Approved(controller, _seller) 
+        PythPriceFeed(_pythAddress, _seller)
     {
         if(agent != address(0) && agent != _seller) _setPermission(agent, true);
         info.nickName = abi.encode(nickname);
@@ -94,9 +98,6 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         info.agentId = keccak256(abi.encodePacked(agent, _now(), nickname));
         tradeFactory = ITradeFactory(_msgSender());
     }
-
-    // Sending ETH via this method activates sell order for native asset
-    receive() external payable {}
 
     // ============ EXTERNAL FUNCTIONS ============
 
@@ -127,7 +128,8 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         address tokenAddress,
         uint256 amount,
         uint256 price,
-        uint256 expirationHours
+        uint256 expirationHours,
+        bytes32 _priceFeedId
     ) external payable onlyApproved nonReentrant whenNotPaused returns(bool) {
         unchecked {
             if(amount == 0) revert InvalidAmount();
@@ -164,7 +166,8 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
                 orders.length
             ));
             uint currentTime = _now();
-            
+            if(price == 0) _updatePriceFeedId(orderId, _priceFeedId); 
+
             // Create order details
             uint index = orders.length;
             orderIndex[orderId] = OrderIndex(index, true);
@@ -388,6 +391,7 @@ contract TradingAccount is ITradingAccount, ReentrancyGuard, Approved {
         uint totalCost;
         if(orderDetails.pricePerUnit == 0) {
             // Use price oracle
+            totalCost = amount * uint(getPriceFor(orderId));
         } else {
             totalCost = orderDetails.pricePerUnit * amountTaken; // Price should be in decimals form
         }

@@ -12,7 +12,7 @@ import { IEscrowFactory } from "../interfaces/IEscrowFactory.sol";
 /**
  * @title Escrow Smart Contract
  * @dev A comprehensive decentralized escrow contract for secure peer-to-peer transactions
- * 
+ * ======== CRYPTO - FIAT ======== 
  * This contract implements a multi-state escrow system that supports:
  * - ETH and ERC20 token transactions
  * - Dispute resolution with arbiters
@@ -38,7 +38,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @dev Main escrow data structure containing all transaction details
      * Includes escrow details, dispute information, fee settings, and platform recipient
      */
-    EscrowData public data;
+    EscrowData internal data;
     
     /**
      * @dev Mapping of authorized agents who can perform certain actions on behalf of parties
@@ -54,7 +54,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Used for functions that either party can call (e.g., raising disputes)
      */
     modifier onlyParties() {
-        if (_msgSender() != data.escrowDetails.buyer && _msgSender() != data.escrowDetails.seller) {
+        if(_msgSender() != data.escrowDetails.buyer && _msgSender() != data.escrowDetails.seller) {
             revert OnlyBuyerOrSellerCanCall();
         }
         _;
@@ -65,7 +65,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Used for buyer-specific actions like depositing funds and confirming fulfillment
      */
     modifier onlyBuyer() {
-        if (_msgSender() != data.escrowDetails.buyer) revert OnlyBuyerCanCall();
+        if(_msgSender() != data.escrowDetails.buyer) revert OnlyBuyerCanCall();
         _;
     }
 
@@ -74,7 +74,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Used for seller-specific actions (currently not used but available for future features)
      */
     modifier onlySeller() {
-        if (_msgSender() != data.escrowDetails.seller) revert OnlySellerCanCall();
+        if(_msgSender() != data.escrowDetails.seller) revert OnlySellerCanCall();
         _;
     }
 
@@ -83,7 +83,18 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Used for dispute resolution functions
      */
     modifier onlyArbiter() {
-        if (_msgSender() != data.escrowDetails.arbiter) revert OnlyArbiterCanCall();
+        if(_msgSender() != data.escrowDetails.arbiter) revert OnlyArbiterCanCall();
+        _;
+    }
+
+    /**
+     * @dev Restricts function access to only the designated arbiter or buyer
+     * Used for dispute resolution functions
+     */
+    modifier onlyArbiterOrBuyer() {
+        if(_msgSender() != data.escrowDetails.buyer) {
+            if(_msgSender() != data.escrowDetails.arbiter) revert OnlyBuyerOrArbiterCanRefundFunds();
+        }
         _;
     }
 
@@ -92,7 +103,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Agents can perform certain actions on behalf of the buyer
      */
     modifier onlyAuthorizedAgent() {
-        if (!authorizedAgents[_msgSender()]) revert OnlyAuthorizedAgentsCanCall();
+        if(!authorizedAgents[_msgSender()]) revert OnlyAuthorizedAgentsCanCall();
         _;
     }
 
@@ -101,7 +112,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @param _state The required escrow state for the function to execute
      */
     modifier validState(EscrowState _state) {
-        if (data.escrowDetails.state != _state) revert InvalidEscrowState();
+        if(data.escrowDetails.state != _state) revert InvalidEscrowState();
         _;
     }
 
@@ -110,7 +121,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Prevents actions on expired escrows
      */
     modifier notExpired() {
-        if (_now() > data.escrowDetails.deadline) revert EscrowHasExpired();
+        if(_now() > data.escrowDetails.deadline) revert EscrowHasExpired();
         _;
     }
 
@@ -119,7 +130,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * Used for functions that should only work on expired escrows (e.g., refunds)
      */
     modifier expired() {
-        if (_now() <= data.escrowDetails.deadline) revert EscrowHasNotExpired();
+        if(_now() <= data.escrowDetails.deadline) revert EscrowHasNotExpired();
         _;
     }
 
@@ -155,12 +166,13 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         address _platformFeeRecipient
     ) Ownable(_msgSender()) {
         // Validate all input parameters
-        if (_buyer == address(0)) revert InvalidBuyerAddress();
-        if (_seller == address(0)) revert InvalidSellerAddress();
-        if (_assetAmount == 0) revert AssetAmountMustBeGreaterThanZero();
-        if (_deadline <= _now()) revert DeadlineMustBeInTheFuture();
-        if (_disputeWindowHours == 0) revert DisputeWindowMustBeGreaterThanZero();
-        if (_platformFeeRecipient == address(0)) revert InvalidPlatformFeeRecipient();
+        if(_buyer == address(0)) revert InvalidBuyerAddress();
+        if(_seller == address(0)) revert InvalidSellerAddress();
+        // Allow address(0) as arbiter - can be set later via becomeArbiter()
+        if(_assetAmount == 0) revert AssetAmountMustBeGreaterThanZero();
+        if(_deadline <= _now()) revert DeadlineMustBeInTheFuture();
+        if(_disputeWindowHours == 0) revert DisputeWindowMustBeGreaterThanZero();
+        if(_platformFeeRecipient == address(0)) revert InvalidPlatformFeeRecipient();
 
         // Initialize escrow details
         data.escrowDetails = EscrowDetails({
@@ -183,6 +195,18 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         data.arbiterFeePercentage = 100; // 1%
         data.feeDenominator = 10000; // 10000 = 100%
         
+        // Initialize dispute info
+        data.disputeInfo = DisputeInfo({
+            isActive: false,
+            disputer: address(0),
+            reason: "",
+            raisedAt: 0,
+            arbiter: address(0),
+            arbiterDecision: false,
+            arbiterReasoning: "",
+            resolvedAt: 0
+        });
+        
         // Emit creation event
         emit EscrowCreated(
             _buyer,
@@ -193,12 +217,6 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
             _deadline
         );
     }
-
-    /**@dev Receive function for ETH deposits
-     * @notice This function allows the contract to receive ETH
-     * The actual deposit logic is handled in the deposit() function
-     */
-    receive() external payable {}
 
     // ============ UTILITY FUNCTIONS ============
     
@@ -247,28 +265,28 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
 
     /**
      * @dev Deposit assets into escrow
-     * @notice Only buyer can deposit assets
+     * @notice Only seller can deposit crypto assets (crypto-to-fiat operation)
      */
     function deposit() 
         external 
         payable 
         nonReentrant 
         whenNotPaused
-        onlyBuyer
+        onlySeller
         validState(EscrowState.AWAITING_DEPOSIT)
         notExpired
     {
-        if (data.escrowDetails.assetToken == address(0)) {
+        if(data.escrowDetails.assetToken == address(0)) {
             // Native token (ETH)
-            if (msg.value < data.escrowDetails.assetAmount) revert IncorrectETHAmount();
+            if(msg.value < data.escrowDetails.assetAmount) revert IncorrectETHAmount();
         } else {
             // ERC20 token
-            if (msg.value != 0) revert ETHNotAcceptedForERC20Escrow();
+            if(msg.value > 0) revert ETHNotAcceptedForERC20Escrow();
             IERC20 token = IERC20(data.escrowDetails.assetToken);
-            if (token.balanceOf(_msgSender()) < data.escrowDetails.assetAmount) {
+            if(token.balanceOf(_msgSender()) < data.escrowDetails.assetAmount) {
                 revert InsufficientTokenBalance();
             }
-            if (token.allowance(_msgSender(), address(this)) < data.escrowDetails.assetAmount) {
+            if(token.allowance(_msgSender(), address(this)) < data.escrowDetails.assetAmount) {
                 revert InsufficientTokenAllowance();
             }
             
@@ -314,11 +332,8 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         whenNotPaused
         validState(EscrowState.AWAITING_FULFILLMENT)
         notExpired
+        onlyArbiterOrBuyer
     {
-        if (_msgSender() != data.escrowDetails.buyer && _msgSender() != data.escrowDetails.arbiter) {
-            revert OnlyBuyerOrArbiterCanReleaseFunds();
-        }
-        
         _releaseFunds(data.escrowDetails.seller);
     }
 
@@ -331,13 +346,10 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         nonReentrant 
         whenNotPaused
         validState(EscrowState.AWAITING_FULFILLMENT)
+        onlyArbiterOrBuyer
     {
-        if (_msgSender() != data.escrowDetails.buyer && _msgSender() != data.escrowDetails.arbiter) {
-            revert OnlyBuyerOrArbiterCanRefundFunds();
-        }
-        
-        if (_msgSender() == data.escrowDetails.buyer) {
-            if (_now() <= data.escrowDetails.deadline) revert DeadlineNotReached();
+        if(_msgSender() == data.escrowDetails.buyer) {
+            if(_now() <= data.escrowDetails.deadline) revert DeadlineNotReached();
         }
         
         _releaseFunds(data.escrowDetails.buyer);
@@ -356,7 +368,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         validState(EscrowState.AWAITING_FULFILLMENT)
         notExpired
     {
-        if (bytes(_reason).length == 0) revert DisputeReasonCannotBeEmpty();
+        if(bytes(_reason).length == 0) revert DisputeReasonCannotBeEmpty();
         uint currentTime = _now();
         data.escrowDetails.state = EscrowState.DISPUTE_RAISED;
         data.escrowDetails.updatedAt = currentTime;
@@ -387,8 +399,8 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         onlyArbiter
         validState(EscrowState.DISPUTE_RAISED)
     {
-        if (!data.disputeInfo.isActive) revert NoActiveDispute();
-        if (bytes(_reasoning).length == 0) revert ReasoningCannotBeEmpty();
+        if(!data.disputeInfo.isActive) revert NoActiveDispute();
+        if(bytes(_reasoning).length == 0) revert ReasoningCannotBeEmpty();
         
         uint currentTime = _now();
         data.disputeInfo.arbiterDecision = _releazeFunds;
@@ -398,7 +410,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         
         data.escrowDetails.updatedAt = currentTime;
 
-        if (_releazeFunds) {
+        if(_releazeFunds) {
             _releaseFunds(data.escrowDetails.seller);
         } else {
             _releaseFunds(data.escrowDetails.buyer);
@@ -462,8 +474,8 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         onlyAuthorizedAgent
         validState(EscrowState.DISPUTE_RAISED)
     {
-        if (!data.disputeInfo.isActive) revert NoActiveDispute();
-        if (bytes(_reasoning).length == 0) revert ReasoningCannotBeEmpty();
+        if(!data.disputeInfo.isActive) revert NoActiveDispute();
+        if(bytes(_reasoning).length == 0) revert ReasoningCannotBeEmpty();
         
         uint currentTime = _now();
         data.disputeInfo.arbiterDecision = _releazeFunds;
@@ -473,7 +485,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
         
         data.escrowDetails.updatedAt = currentTime;
 
-        if (_releazeFunds) {
+        if(_releazeFunds) {
             _releaseFunds(data.escrowDetails.seller);
         } else {
             _releaseFunds(data.escrowDetails.buyer);
@@ -502,7 +514,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @dev Get contract balance
      */
     function getBalance() external view returns (uint256) {
-        if (data.escrowDetails.assetToken == address(0)) {
+        if(data.escrowDetails.assetToken == address(0)) {
             return address(this).balance;
         } else {
             return IERC20(data.escrowDetails.assetToken).balanceOf(address(this));
@@ -516,7 +528,7 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @param _agent Agent address to authorize
      */
     function authorizeAgent(address _agent) external onlyOwner {
-        if (_agent == address(0)) revert InvalidAgentAddress();
+        if(_agent == address(0)) revert InvalidAgentAddress();
         authorizedAgents[_agent] = true;
     }
 
@@ -547,11 +559,11 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @notice This should only be used in extreme circumstances
      */
     function emergencyWithdraw() external onlyOwner {
-        if (!paused()) revert ContractMustBePaused();
+        if(!paused()) revert ContractMustBePaused();
         
-        if (data.escrowDetails.assetToken == address(0)) {
+        if(data.escrowDetails.assetToken == address(0)) {
             (bool success, ) = payable(owner()).call{value: address(this).balance}("");
-            if (!success) revert EmergencyWithdrawFailed();
+            if(!success) revert EmergencyWithdrawFailed();
         } else {
             IERC20 token = IERC20(data.escrowDetails.assetToken);
             token.safeTransfer(owner(), token.balanceOf(address(this)));
@@ -565,54 +577,58 @@ contract Escrow is IEscrow, ReentrancyGuard, Ownable, Pausable {
      * @param _recipient Address to receive the funds
      */
     function _releaseFunds(address _recipient) internal {
-        if (data.escrowDetails.state != EscrowState.AWAITING_FULFILLMENT && 
-            data.escrowDetails.state != EscrowState.DISPUTE_RAISED) {
+        if(data.escrowDetails.state != EscrowState.AWAITING_FULFILLMENT) {
+            revert InvalidStateForFundRelease();
+        }
+        if(data.escrowDetails.state == EscrowState.DISPUTE_RAISED) {
             revert InvalidStateForFundRelease();
         }
 
-        uint256 amount = data.escrowDetails.assetAmount;
-        uint256 platformFee = (amount * data.platformFeePercentage) / data.feeDenominator;
-        uint256 arbiterFee = (amount * data.arbiterFeePercentage) / data.feeDenominator;
-        uint256 netAmount = (amount - platformFee) - arbiterFee;
-        uint currentTime = _now();
-        data.escrowDetails.state = _recipient == data.escrowDetails.seller ? 
-            EscrowState.COMPLETED : EscrowState.CANCELED;
-        data.escrowDetails.updatedAt = currentTime;
+        unchecked{
+            uint256 amount = data.escrowDetails.assetAmount;
+            uint256 platformFee = (amount * data.platformFeePercentage) / data.feeDenominator;
+            uint256 arbiterFee = (amount * data.arbiterFeePercentage) / data.feeDenominator;
+            uint256 netAmount = (amount - platformFee) - arbiterFee;
+            uint currentTime = _now();
+            data.escrowDetails.state = EscrowState.COMPLETED;
+            data.escrowDetails.updatedAt = currentTime;
+            if(data.escrowDetails.assetToken == address(0)) {
+                // Native token (ETH)
+                if(netAmount > 0) {
+                    (bool success, ) = payable(_recipient).call{value: netAmount}("");
+                    if(!success) revert TransferToRecipientFailed();
+                }
+                if(platformFee > 0) {
+                    (bool success, ) = payable(data.platformFeeRecipient).call{value: platformFee}("");
+                    if(!success) revert TransferToPlatformFailed();
+                }
+                if(arbiterFee > 0) {
+                    (bool success, ) = payable(data.escrowDetails.arbiter).call{value: arbiterFee}("");
+                    if(!success) revert TransferToArbiterFailed();
+                }
+            } else {
+                // ERC20 token
+                IERC20 token = IERC20(data.escrowDetails.assetToken);
+                
+                if(netAmount > 0) {
+                    token.safeTransfer(_recipient, netAmount);
+                }
+                if(platformFee > 0) {
+                    token.safeTransfer(data.platformFeeRecipient, platformFee);
+                }
+                if(arbiterFee > 0) {
+                    token.safeTransfer(data.escrowDetails.arbiter, arbiterFee);
+                }
+            }
 
-        if (data.escrowDetails.assetToken == address(0)) {
-            // Native token (ETH)
-            if (netAmount > 0) {
-                (bool success, ) = payable(_recipient).call{value: netAmount}("");
-                if (!success) revert TransferToRecipientFailed();
+            if(data.escrowDetails.arbiter != address(0)) {
+                require(IEscrowFactory(owner()).updateArbiterStatus(data.escrowDetails.arbiter), "Update failed");
             }
-            if (platformFee > 0) {
-                (bool success, ) = payable(data.platformFeeRecipient).call{value: platformFee}("");
-                if (!success) revert TransferToPlatformFailed();
-            }
-            if (arbiterFee > 0) {
-                (bool success, ) = payable(data.escrowDetails.arbiter).call{value: arbiterFee}("");
-                if (!success) revert TransferToArbiterFailed();
-            }
-        } else {
-            // ERC20 token
-            IERC20 token = IERC20(data.escrowDetails.assetToken);
-            
-            if (netAmount > 0) {
-                token.safeTransfer(_recipient, netAmount);
-            }
-            if (platformFee > 0) {
-                token.safeTransfer(data.platformFeeRecipient, platformFee);
-            }
-            if (arbiterFee > 0) {
-                token.safeTransfer(data.escrowDetails.arbiter, arbiterFee);
-            }
+
+            emit FundsReleased(_recipient, data.escrowDetails.assetToken, netAmount, currentTime);
+
         }
 
-        if(data.escrowDetails.arbiter != address(0)) {
-            require(IEscrowFactory(owner()).updateArbiterStatus(data.escrowDetails.arbiter), "Update failed");
-        }
-
-        emit FundsReleased(_recipient, data.escrowDetails.assetToken, netAmount, currentTime);
     } 
 
 }

@@ -257,7 +257,12 @@ contract EscrowFactory is IEscrowFactory, Ownable, Pausable, ReentrancyGuard {
             escrows,
             userEscrows[_user],
             totalEscrowsCreated,
-            userEscrows[_user].length
+            userEscrows[_user].length,
+            address(arbitrator),
+            platformFeeRecipient,
+            defaultDisputeWindowHours,
+            totalEscrowsCreated,
+            creationFee
         );
     }
 

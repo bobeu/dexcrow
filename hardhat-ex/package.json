@@ -8,6 +8,7 @@
     "clean": "rm -rf ./dist",
     "compile": "hardhat compile",
     "build": "yarn hardhat build",
+    "sync:data": "node sync-data.js",
     "test:solidity": "yarn hardhat test solidity",
     "start:node": "yarn hardhat node",
     "add-base-alc": "yarn hardhat keystore set PRIVATE_farc --network base",
@@ -39,7 +40,7 @@
     "@nomicfoundation/hardhat-viem-assertions": "^3.0.2",
     "@nomiclabs/hardhat-web3": "^2.1.0",
     "@openzeppelin/contracts": "^5.4.0",
-    "@pythnetwork/pyth-sdk-solidity": "^0.1.0",
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
     "dotenv": "^17.2.3",
     "hardhat-deploy": "^1.0.4"
   }

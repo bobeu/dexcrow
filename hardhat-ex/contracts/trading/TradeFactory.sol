@@ -12,6 +12,7 @@ import { TradingAccount, IERC20, ITradingAccount, ITradeFactory, IERC20Metadata 
  */
 contract TradeFactory is ITradeFactory, Ownable {
     // ============ STATE VARIABLES ============
+    address private immutable pythAddress;
 
     /**
      * @dev Mapping of user addresses to positions in the account array
@@ -71,8 +72,9 @@ contract TradeFactory is ITradeFactory, Ownable {
     /**
      * @dev Constructor to initialize the trade factory
      */
-    constructor() Ownable(_msgSender()) {
+    constructor(address _pythAddress) Ownable(_msgSender()) {
         creationFee = 1e15 wei; // 0.0015 ether per 24 hours
+        pythAddress = _pythAddress;
     }
 
     // ============ INTERNAL FUNCTIONS ============
@@ -90,7 +92,7 @@ contract TradeFactory is ITradeFactory, Ownable {
         if(!id.hasIndex) {
             // Deploy new trading account and save to storage
             uint currentTime = _now();
-            account = address(new TradingAccount(seller, agent, owner(), nickName));
+            account = address(new TradingAccount(seller, agent, owner(), nickName, pythAddress));
             _indexes[seller] = Index(_accounts.length, true);
             _accounts.push(
                 AccountInfo({
@@ -235,7 +237,8 @@ contract TradeFactory is ITradeFactory, Ownable {
             totalAccounts: _accounts.length,
             accounts: _accounts,
             variables: _getFeeVariables(any),
-            isPaused: isPaused
+            isPaused: isPaused,
+            pythAddress: pythAddress
         });
     }
 

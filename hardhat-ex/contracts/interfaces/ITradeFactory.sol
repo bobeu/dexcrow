@@ -44,6 +44,7 @@ interface ITradeFactory is ICommon {
         AccountInfo[] accounts;
         FactoryVariables variables;
         bool isPaused;
+        address pythAddress;
     }
 
     // Events

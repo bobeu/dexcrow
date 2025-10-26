@@ -47,6 +47,11 @@ interface IEscrowFactory {
         address[] userEscrows;
         uint totalEscrows;
         uint userEscrowCount;
+        address arbitrator;
+        address platformFeeRecipient;
+        uint256 defaultDisputeWindowHours;
+        uint256 totalEscrowsCreated;
+        uint256 creationFee;    
     }
 
    function getArbiterStatus(address arbiter) external view returns(bool, uint8 num);

@@ -8,18 +8,18 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8.0-blue.svg)](https://www.typescriptlang.org/)
 [![Avail Nexus](https://img.shields.io/badge/Avail%20Nexus-Integrated-green.svg)](https://nexus.availproject.org/)
 
-## 🚀 Overview
+## Overview
 
 TradeVerse is a next-generation decentralized platform that revolutionizes peer-to-peer transactions and trading by combining two powerful features:
 
-1. **🔒 Secure Escrow System** - Trustless peer-to-peer transactions with dispute resolution
-2. **📈 Advanced Cross-Chain Trading Platform** - Multi-chain trading with live price feeds, reputation system, and seamless cross-chain operations powered by Avail Nexus SDK
+1. **Secure Escrow System** - Trustless peer-to-peer transactions with dispute resolution
+2. **Advanced Cross-Chain Trading Platform** - Multi-chain trading with live price feeds, reputation system, and seamless cross-chain operations powered by Avail Nexus SDK
 
 Built on the principles of decentralization, security, and user empowerment, TradeVerse provides a seamless cross-chain experience for both casual users and professional traders, eliminating the complexity of manual bridging and enabling true multi-chain interoperability.
 
-## ✨ Key Features
+## Key Features
 
-### 🔒 Escrow System
+### Escrow System
 - **Multi-token Support**: ETH and ERC20 tokens
 - **Dispute Resolution**: Built-in arbitration system
 - **Agent Authorization**: Delegate transaction management
@@ -27,40 +27,40 @@ Built on the principles of decentralization, security, and user empowerment, Tra
 - **Platform Fees**: Configurable fee structure
 - **Security**: Reentrancy protection and access controls
 
-### 📈 Cross-Chain Trading Platform
-- **🌐 Seamless Cross-Chain Operations**: Powered by Avail Nexus SDK for unified multi-chain experience
-- **🔄 One-Click Bridge & Execute**: Bridge tokens and create orders in a single transaction
-- **📊 Unified Token Balances**: View and manage tokens across all supported chains from one interface
-- **⚡ Live Price Feeds**: Integration with Pyth Network for real-time cross-chain pricing
-- **⭐ Reputation System**: Trader reputation based on successful cross-chain transactions
-- **🎯 Smart Order Management**: Create, execute, and manage orders across multiple chains
-- **🔒 Advanced Security**: Cross-chain withdrawal controls and cooldown periods
-- **🛡️ Admin Controls**: Order blacklisting and platform management across all chains
-- **🚀 Gas Optimization**: Efficient cross-chain operations with minimal gas costs
+### Cross-Chain Trading Platform
+- ** Seamless Cross-Chain Operations**: Powered by Avail Nexus SDK for unified multi-chain experience
+- ** One-Click Bridge & Execute**: Bridge tokens and create orders in a single transaction
+- ** Unified Token Balances**: View and manage tokens across all supported chains from one interface
+- ** Live Price Feeds**: Integration with Pyth Network for real-time cross-chain pricing
+- ** Reputation System**: Trader reputation based on successful cross-chain transactions
+- ** Smart Order Management**: Create, execute, and manage orders across multiple chains
+- ** Advanced Security**: Cross-chain withdrawal controls and cooldown periods
+- ** Admin Controls**: Order blacklisting and platform management across all chains
+- ** Gas Optimization**: Efficient cross-chain operations with minimal gas costs
 
-## 🌐 Avail Nexus Integration
+## Avail Nexus Integration
 
 ### What is Avail Nexus?
 Avail Nexus is a cutting-edge cross-chain infrastructure that enables seamless interoperability between different blockchains. TradeVerse leverages the Avail Nexus SDK to provide users with a unified experience across multiple chains without the complexity of manual bridging.
 
 ### How TradeVerse Uses Avail Nexus
 
-#### 🔄 **Unified Token Management**
+#### **Unified Token Management**
 - **Single Interface**: Users can view all their token balances across Ethereum, Base, Polygon, and other supported chains in one dashboard
 - **Real-time Sync**: Balances are automatically synchronized and updated across all chains
 - **Cross-chain Visibility**: No need to switch between different chain interfaces
 
-#### 🚀 **One-Click Cross-Chain Operations**
+#### **One-Click Cross-Chain Operations**
 - **Bridge & Execute**: Users can bridge tokens from one chain and immediately create trading orders on another chain in a single transaction
 - **Automatic Approvals**: Token approvals are handled automatically during cross-chain operations
 - **Gas Optimization**: Efficient routing reduces gas costs and transaction complexity
 
-#### 🛡️ **Enhanced Security**
+#### **Enhanced Security**
 - **Secure Bridging**: All cross-chain operations are secured through Avail's proven infrastructure
 - **Transaction Verification**: Cross-chain transactions are verified and validated before execution
 - **Risk Mitigation**: Reduced risk of failed transactions or lost funds during cross-chain operations
 
-#### ⚡ **Developer Benefits**
+#### **Developer Benefits**
 - **Simple Integration**: Easy-to-use SDK with comprehensive TypeScript support
 - **Type Safety**: Full type safety for all cross-chain operations
 - **Error Handling**: Robust error handling and user feedback for failed operations
@@ -90,22 +90,17 @@ const simulation = await simulateBridgeAndCreateOrder(params);
 ### Supported Chains & Tokens
 - **Ethereum Mainnet** (Chain ID: 1)
 - **Base** (Chain ID: 8453)
-- **Polygon** (Chain ID: 137)
-- **Arbitrum** (Chain ID: 42161)
-- **Optimism** (Chain ID: 10)
-- **BSC** (Chain ID: 56)
-- **Avalanche** (Chain ID: 43114)
-- **Celo** (Chain ID: 42220)
 
 ### Advantages of Avail Nexus Integration
 
-1. **🎯 User Experience**
+1. **User Experience**
    - No manual bridging required
    - Single interface for all chains
    - Reduced transaction complexity
    - Faster order execution
+   - Simplifies escrow creation
 
-2. **💰 Cost Efficiency**
+2. ** Cost Efficiency**
    - Optimized gas usage
    - Reduced transaction fees
    - Batch operations support
