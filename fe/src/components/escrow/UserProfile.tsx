@@ -3,7 +3,7 @@ import { useAccount } from 'wagmi';
 import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext';
 import { Card, Badge, Button } from '@/components/ui';
 import { Clock, Users, DollarSign, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react';
-import { EscrowState } from '@/lib/types';
+import { EscrowState, Variant } from '@/lib/types';
 
 const UserProfile: React.FC = () => {
   const { address } = useAccount();
@@ -54,20 +54,20 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  const getStateVariant = (state: EscrowState) => {
+  const getStateVariant = (state: EscrowState) : Variant => {
     switch (state) {
       case EscrowState.AWAITING_DEPOSIT:
         return 'warning';
       case EscrowState.AWAITING_FULFILLMENT:
         return 'info';
       case EscrowState.DISPUTE_RAISED:
-        return 'error';
+        return 'danger';
       case EscrowState.COMPLETED:
         return 'success';
       case EscrowState.CANCELED:
-        return 'secondary';
+        return 'danger';
       default:
-        return 'secondary';
+        return 'default';
     }
   };
 
@@ -157,7 +157,7 @@ const UserProfile: React.FC = () => {
                   </Badge>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="font-mono">
+                  <Badge variant="info" className="font-mono">
                     You are {getUserRole(escrow)}
                   </Badge>
                   <Button
@@ -278,7 +278,7 @@ const UserProfile: React.FC = () => {
 
                     {canTakeAction(escrow, 'dispute') && (
                       <Button
-                        variant="warning"
+                        variant="primary"
                         onClick={() => {
                           console.log('Raise dispute for escrow:', index);
                         }}

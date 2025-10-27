@@ -129,6 +129,16 @@ import DataProvider from "./DataProvider";
 //     appIcon: "https://dexcrow.vercel.app/dexcrow-logo.png",
 //   }),
 // );
+const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
+console.log("process.env.NEXT_PUBLIC_PROJECT_ID", process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID);
+
+// Provide a fallback project ID for development
+const fallbackProjectId = "your_walletconnect_project_id_here";
+const finalProjectId = projectId || fallbackProjectId;
+
+if (!finalProjectId || finalProjectId === fallbackProjectId) {
+  console.warn('⚠️  NEXT_PUBLIC_PROJECT_ID is not set. Please create a .env.local file with your WalletConnect Project ID from https://cloud.walletconnect.com/');
+}
 const queryClient = new QueryClient();
 
 // projectId: walletConnectProjectId!,
@@ -140,7 +150,7 @@ const queryClient = new QueryClient();
  */ 
 const config = getDefaultConfig({
   appName: 'Tradeverse',
-  projectId: '01934b1b14be39ddf47490f1bfc1527a',
+  projectId: finalProjectId,
   appIcon: 'https://dexcrow.vercel.app/dexcrow-logo.png',
   appDescription: "Decentralized trading universe",
   appUrl: "https://tradeverse.vercel.app",

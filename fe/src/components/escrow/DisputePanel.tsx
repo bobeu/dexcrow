@@ -1,44 +1,29 @@
 import React from 'react';
-import { EscrowContractState, UserRole, EscrowState } from '@/lib/types';
+import { Address, DisputeInfo, EscrowDetails, Variant } from '@/lib/types';
 import { 
   AlertTriangle, 
   Gavel, 
   User, 
   Clock, 
-  CheckCircle, 
-  XCircle,
-  FileText
 } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
+import { formatDate, toLower, toNum, truncateAddress } from '@/utilities';
 
 interface DisputePanelProps {
-  escrowState: EscrowContractState;
-  userRole: UserRole;
+  data: DisputeInfo;
+  contractAddress: Address;
+  escrowDetail: EscrowDetails;
 }
 
-const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) => {
-  const formatAddress = (address: string) => {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString();
-  };
-
-  const getDisputeStatusVariant = () => {
+const DisputePanel: React.FC<DisputePanelProps> = ({ data, contractAddress, escrowDetail }) => {
+  const {  statusText, variant } = React.useMemo(() : {variant: Variant, statusText: string} => {
     // Check if there's dispute info available
-    if (escrowState.currentState === EscrowState.DISPUTE_RAISED) {
-      return 'danger';
+    const defaultValue : {variant: Variant, statusText: string} = {variant: 'danger', statusText: 'Dispute Raised - Awaiting Resolution'}; 
+    if (data.isActive) {
+      return defaultValue;
     }
-    return 'warning';
-  };
-
-  const getDisputeStatusText = () => {
-    if (escrowState.currentState === EscrowState.DISPUTE_RAISED) {
-      return 'Dispute Raised - Awaiting Resolution';
-    }
-    return 'Pending Resolution';
-  };
+    return { variant: "warning", statusText: 'Pending Resolution'};
+  }, [data]);
 
   const InfoCard = ({ 
     title, 
@@ -75,8 +60,8 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
               Dispute Information
             </h3>
           </div>
-          <Badge variant={getDisputeStatusVariant()}>
-            {getDisputeStatusText()}
+          <Badge variant={variant}>
+            { statusText }
           </Badge>
         </div>
         
@@ -84,13 +69,13 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Dispute ID:</span>
             <span className="text-sm text-white font-mono">
-              #{escrowState.contractAddress?.slice(-8) || 'N/A'}
+              #{contractAddress?.slice(-8) || 'N/A'}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Raised By:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.seller ? formatAddress(escrowState.seller) : 'N/A'}
+              {truncateAddress(escrowDetail.seller)}
             </span>
           </div>
           <div className="flex justify-between">
@@ -108,19 +93,17 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Assigned Arbiter:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.arbiter)}
+              {truncateAddress(escrowDetail.arbiter)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Assignment Time:</span>
             <span className="text-sm text-white font-mono">
-              {formatDate(escrowState.deadline)}
+              {formatDate(toNum(escrowDetail.deadline))}
             </span>
           </div>
         </div>
       </InfoCard>
-
-      {/* Resolution section removed - not available in EscrowContractState */}
 
       {/* Disputer Information */}
       <InfoCard title="Disputer Information" icon={User} borderColor="red">
@@ -128,14 +111,14 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Address:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputer ? formatAddress(escrowState.disputer) : 'N/A'}
+              {truncateAddress(data.disputer)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Role:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputer === escrowState.buyer ? 'Buyer' : 
-               escrowState.disputer === escrowState.seller ? 'Seller' : 'Unknown'}
+              {toLower(data.disputer) === toLower(escrowDetail.buyer) ? 'Buyer' : 
+               toLower(data.disputer) === toLower(escrowDetail.seller) ? 'Seller' : 'Unknown'}
             </span>
           </div>
         </div>
@@ -147,13 +130,13 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Buyer:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.buyer)}
+              {truncateAddress(escrowDetail.buyer)}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Seller:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.seller)}
+              {truncateAddress(escrowDetail.seller)}
             </span>
           </div>
         </div>
@@ -165,21 +148,21 @@ const DisputePanel: React.FC<DisputePanelProps> = ({ escrowState, userRole }) =>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Dispute Raised:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputeTimestamp ? formatDate(escrowState.disputeTimestamp) : 'N/A'}
+              {formatDate(data.raisedAt)}
             </span>
           </div>
-          {escrowState.disputeResolution && (
+          {data.resolvedAt > 0n && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#ffff00] font-mono">Resolution:</span>
               <span className="text-sm text-white font-mono">
-                {formatDate(escrowState.disputeResolution.timestamp)}
+                {formatDate(data.resolvedAt)}
               </span>
             </div>
           )}
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Status:</span>
-            <Badge variant={getDisputeStatusVariant()}>
-              {getDisputeStatusText()}
+            <Badge variant={variant}>
+              {statusText}
             </Badge>
           </div>
         </div>

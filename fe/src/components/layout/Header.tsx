@@ -1,5 +1,4 @@
 import React from 'react';
-// import { Shield } from 'lucide-react';
 import ConnectWalletButton from '@/components/actions/ConnectButton';
 
 const Header: React.FC = () => {

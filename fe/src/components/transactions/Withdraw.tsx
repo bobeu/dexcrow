@@ -5,7 +5,7 @@ import { Button } from '@/components/ui';
 import { useChainId } from 'wagmi';
 import TransactionModal from '@/components/modals/TransactionModal';
 import { filterTransactionData } from '@/utilities';
-import { Address, FunctionName } from '@/lib/types';
+import { Address } from '@/lib/types';
 
 interface WithdrawProps {
   tradingAccountAddress: string;

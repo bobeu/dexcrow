@@ -101,7 +101,7 @@ const RejectArbiter: React.FC<RejectArbiterProps> = ({
       <Button
         onClick={handleRejectArbiter}
         disabled={isPending || isConfirming || !arbiterAddress}
-        variant="destructive"
+        variant="danger"
         className="w-full"
       >
         {isPending || isConfirming ? 'Rejecting...' : 'Reject Arbiter'}

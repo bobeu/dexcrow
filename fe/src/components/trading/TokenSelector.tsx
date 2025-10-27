@@ -4,15 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { 
   getUnifiedBalances, 
-  getUnifiedBalance, 
+  // getUnifiedBalance, 
   isTokenSupported,
-  getTokenMetadata,
-  isChainSupported,
+  // getTokenMetadata,
+  // isChainSupported,
   TRADEVERSE_SUPPORTED_CHAINS,
-  SUPPORTED_TOKENS,
+  // SUPPORTED_TOKENS,
 } from '@/lib/nexus';
 import { type UserAssetDatum } from '@avail-project/nexus-core';
-import { parseUnits } from 'viem';
+// import { parseUnits } from 'viem';
 
 interface TokenSelectorProps {
   onTokenSelect: (token: UserAssetDatum) => void;
@@ -21,19 +21,19 @@ interface TokenSelectorProps {
   selectedToken?: UserAssetDatum | null;
 }
 
-interface TokenBreakdown {
-  chain: {
-    id: number;
-    logo: string;
-    name: string;
-  };
-  balance: string;
-  balanceInFiat: number;
-  contractAddress: `0x${string}`;
-  decimals: number;
-  isNative?: boolean;
-  universe: string;
-}
+// interface TokenBreakdown {
+//   chain: {
+//     id: number;
+//     logo: string;
+//     name: string;
+//   };
+//   balance: string;
+//   balanceInFiat: number;
+//   contractAddress: `0x${string}`;
+//   decimals: number;
+//   isNative?: boolean;
+//   universe: string;
+// }
 
 const TokenSelector: React.FC<TokenSelectorProps> = ({
   onTokenSelect,
@@ -126,8 +126,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
     })}`;
   };
 
-  const getChainLogo = (chainId: number) => {
-    // Simple chain logos - in production, you'd use actual logos
+  const getChainEmojiColor = (chainId: number) => {
     const logos: Record<number, string> = {
       1: '🔷', // Ethereum
       8453: '🔵', // Base
@@ -186,8 +185,8 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Chains</option>
-              <option value={TRADEVERSE_SUPPORTED_CHAINS.ETHEREUM}>Ethereum</option>
-              <option value={TRADEVERSE_SUPPORTED_CHAINS.BASE}>Base</option>
+              <option value={TRADEVERSE_SUPPORTED_CHAINS[0]}>Ethereum</option>
+              <option value={TRADEVERSE_SUPPORTED_CHAINS[1]}>Base</option>
             </select>
           </div>
         </div>
@@ -246,7 +245,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
                   {token.breakdown.map((breakdown, breakdownIndex) => (
                     <div key={breakdownIndex} className="flex items-center justify-between text-xs text-gray-600">
                       <div className="flex items-center space-x-1">
-                        <span>{getChainLogo(breakdown.chain.id)}</span>
+                        <span>{getChainEmojiColor(breakdown.chain.id)}</span>
                         <span>{getChainName(breakdown.chain.id)}</span>
                         {breakdown.isNative && <span className="text-blue-600">(Native)</span>}
                       </div>

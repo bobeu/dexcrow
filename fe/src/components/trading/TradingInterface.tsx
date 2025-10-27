@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
-import CreateOrderModal from './CreateOrderModal';
 import { 
   initializeWithProvider, 
-  isInitialized, 
+  // isInitialized, 
   getUnifiedBalances,
   TRADEVERSE_SUPPORTED_CHAINS 
 } from '@/lib/nexus';
@@ -32,18 +30,18 @@ interface Order {
   sellerAddress: string;
 }
 
-interface CreateOrderModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (orderData: Partial<Order>) => void;
-}
+// interface CreateOrderModalProps {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onSubmit: (orderData: Partial<Order>) => void;
+// }
 
-interface OrderDetailsModalProps {
-  isOpen: boolean;
-  orderId: string | null;
-  onClose: () => void;
-  order?: Order;
-}
+// interface OrderDetailsModalProps {
+//   isOpen: boolean;
+//   orderId: string | null;
+//   onClose: () => void;
+//   order?: Order;
+// }
 
 interface SupportedChain {
   chainId: number;
@@ -99,8 +97,8 @@ const TradingInterface: React.FC = () => {
         
         // Set supported chains for TradeVerse
         setSupportedChains([
-          { chainId: TRADEVERSE_SUPPORTED_CHAINS.ETHEREUM, chainName: 'Ethereum', isActive: true, factoryAddress: '0x...' },
-          { chainId: TRADEVERSE_SUPPORTED_CHAINS.BASE, chainName: 'Base', isActive: true, factoryAddress: '0x...' },
+          { chainId: TRADEVERSE_SUPPORTED_CHAINS[0], chainName: 'Ethereum', isActive: true, factoryAddress: '0x...' },
+          { chainId: TRADEVERSE_SUPPORTED_CHAINS[1], chainName: 'Base', isActive: true, factoryAddress: '0x...' },
         ]);
 
         // Load user balances if Nexus is initialized
@@ -119,7 +117,7 @@ const TradingInterface: React.FC = () => {
           {
             id: '0x123...',
             tokenAddress: '0x1234567890123456789012345678901234567890',
-            chainId: TRADEVERSE_SUPPORTED_CHAINS.ETHEREUM,
+            chainId: TRADEVERSE_SUPPORTED_CHAINS[1],
             amount: '100.0',
             price: '0.01',
             useLivePrice: false,
@@ -134,7 +132,7 @@ const TradingInterface: React.FC = () => {
           {
             id: '0x789...',
             tokenAddress: '0x9876543210987654321098765432109876543210',
-            chainId: TRADEVERSE_SUPPORTED_CHAINS.BASE,
+            chainId: TRADEVERSE_SUPPORTED_CHAINS[1],
             amount: '50.0',
             price: '0.02',
             useLivePrice: true,

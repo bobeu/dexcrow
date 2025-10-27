@@ -1,83 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext';
+import { FormattedEscrowDetails } from '@/lib/types';
+import { formatEscrowDetails } from '@/lib/types/mockdata';
+import { toNum } from '@/utilities';
+import React, { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { parseEther, formatEther } from 'viem';
-
-/**
- * @fileoverview Escrow interface component for TradeVerse
- * @author TradeVerse Team
- */
-
-interface EscrowData {
-  id: string;
-  buyer: string;
-  seller: string;
-  arbiter: string;
-  amount: string;
-  token: string;
-  description: string;
-  status: 'AWAITING_DEPOSIT' | 'AWAITING_FULFILLMENT' | 'DISPUTE_RAISED' | 'COMPLETED' | 'CANCELED';
-  createdAt: number;
-  deadline: number;
-  disputeWindow: number;
-}
 
 const EscrowInterface: React.FC = () => {
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
+  const { allEscrows } = useDataContext();
 
   // State
-  const [escrows, setEscrows] = useState<EscrowData[]>([]);
   const [showCreateEscrow, setShowCreateEscrow] = useState(false);
   const [showEscrowDetails, setShowEscrowDetails] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock data for demonstration
-  useEffect(() => {
-    setEscrows([
-      {
-        id: '0x123...',
-        buyer: '0x456...',
-        seller: '0x789...',
-        arbiter: '0xabc...',
-        amount: '1.0',
-        token: 'ETH',
-        description: 'Purchase of digital artwork',
-        status: 'AWAITING_FULFILLMENT',
-        createdAt: Date.now() - 3600000,
-        deadline: Date.now() + 86400000,
-        disputeWindow: 24
-      },
-      {
-        id: '0x456...',
-        buyer: '0xdef...',
-        seller: '0xghi...',
-        arbiter: '0xjkl...',
-        amount: '100.0',
-        token: 'USDC',
-        description: 'Software development services',
-        status: 'COMPLETED',
-        createdAt: Date.now() - 172800000,
-        deadline: Date.now() - 86400000,
-        disputeWindow: 48
-      },
-      {
-        id: '0x789...',
-        buyer: '0x123...',
-        seller: '0x456...',
-        arbiter: '0x789...',
-        amount: '0.5',
-        token: 'ETH',
-        description: 'Consulting services',
-        status: 'DISPUTE_RAISED',
-        createdAt: Date.now() - 7200000,
-        deadline: Date.now() + 43200000,
-        disputeWindow: 24
-      }
-    ]);
-  }, []);
+  const escrows = React.useMemo(() => { 
+    const escrows : FormattedEscrowDetails[] = allEscrows.map(({contractAddress, ...rest}) => (formatEscrowDetails(rest.escrowDetails, contractAddress)));
+    return escrows;
+  }, [allEscrows]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -289,7 +232,7 @@ const EscrowInterface: React.FC = () => {
                     </div>
                   </div>
                   <span className="text-xs text-gray-500">
-                    {formatTimeRemaining(escrow.deadline)}
+                    {formatTimeRemaining(toNum(escrow.deadline))}
                   </span>
                 </div>
 

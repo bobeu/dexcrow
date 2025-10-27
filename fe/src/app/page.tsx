@@ -19,7 +19,7 @@ import { AppMode } from '@/lib/types';
 export default function Home() {
   // Wagmi hooks
   const { address, isConnected } = useAccount();
-  const { arbitratorsData, tradeFactoryData } = useDataContext();
+  const { arbitratorsData } = useDataContext();
   
   // State
   const [mode, setMode] = useState<AppMode>('create');
@@ -29,10 +29,6 @@ export default function Home() {
   // Show welcome modal on first visit
   useEffect(() => {
     setShowWelcomeModal(true);
-  }, []);
-
-  useEffect(() => {
-    
   }, []);
 
   // Mode switching
@@ -51,12 +47,12 @@ export default function Home() {
   );
 
   // Check if user is admin/owner
-  const isAdmin = address && (
-    tradeFactoryData.owner.toLowerCase() === address.toLowerCase() ||
-    arbitratorsData.arbiters.some(arbiter => 
-      arbiter.identifier.toLowerCase() === address.toLowerCase() && arbiter.isApproved
-    )
-  );
+  // const isAdmin = address && (
+  //   tradeFactoryData.owner.toLowerCase() === address.toLowerCase() ||
+  //   arbitratorsData.arbiters.some(arbiter => 
+  //     arbiter.identifier.toLowerCase() === address.toLowerCase() && arbiter.isApproved
+  //   )
+  // );
 
   // Render content based on mode
   const renderContent = () => {

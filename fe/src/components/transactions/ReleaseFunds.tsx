@@ -30,7 +30,7 @@ const ReleaseFunds: React.FC<ReleaseFundsProps> = ({
       functionNames: ['releaseFunds']
     });
     const td = transactionData[0];
-    return {
+    return { 
       abi: td.abi as any,
       address: escrowAddress as Address,
       functionName: td.functionName,

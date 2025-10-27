@@ -33,7 +33,7 @@ const FulfillOrder: React.FC<FulfillOrderProps> = ({
   const trxnData = React.useMemo(() => {
     const { transactionData } = filterTransactionData({
       chainId,
-      filter: true,
+      filter: true, 
       functionNames: ['fulfillOrder']
     });
     const td = transactionData[0];

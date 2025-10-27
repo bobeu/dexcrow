@@ -28,7 +28,7 @@ const SetVerseToken: React.FC<SetVerseTokenProps> = ({
       chainId,
       filter: true,
       functionNames: ['setVerseToken']
-    });
+    }); 
     const td = transactionData[0];
     return {
       abi: td.abi as any,

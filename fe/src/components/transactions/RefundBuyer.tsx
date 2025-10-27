@@ -26,7 +26,7 @@ const RefundBuyer: React.FC<RefundBuyerProps> = ({
   const trxnData = React.useMemo(() => {
     const { transactionData } = filterTransactionData({
       chainId,
-      filter: true,
+      filter: true, 
       functionNames: ['refundBuyer']
     });
     const td = transactionData[0];

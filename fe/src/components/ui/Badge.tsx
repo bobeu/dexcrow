@@ -1,10 +1,9 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import React, { JSX } from 'react';
 
 interface BadgeProps {
   children?: React.ReactNode;
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
-  icon?: LucideIcon;
+  icon?: JSX.Element;
   className?: string;
 }
 
@@ -38,7 +37,7 @@ const Badge: React.FC<BadgeProps> = ({
         ${className}
       `}
     >
-      {Icon && <Icon className="w-4 h-4" />}
+      {Icon && Icon}
       <span>{children && children}</span>
     </div>
   );

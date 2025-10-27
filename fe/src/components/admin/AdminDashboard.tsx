@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
 import { useAccount } from 'wagmi';
-import { Card, Button, Input, Textarea, Badge, Modal } from '@/components/ui';
+import { Card, Input, Badge } from '@/components/ui';
 import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext';
 import { formatAddr } from '@/utilities';
 import { Shield, Settings, Users, DollarSign } from 'lucide-react';
 
 // Import all admin transaction components
 import SetPlatformFee from '@/components/transactions/SetPlatformFee';
-import WithdrawFees from '@/components/transactions/WithdrawFees';
-import SetFactoryVariables from '@/components/transactions/SetFactoryVariables';
 import Pause from '@/components/transactions/Pause';
 import Unpause from '@/components/transactions/Unpause';
 import SetEscrowCreationFee from '@/components/transactions/SetEscrowCreationFee';
-import WithdrawEscrowFees from '@/components/transactions/WithdrawEscrowFees';
 import SetMinimumArbiterHolding from '@/components/transactions/SetMinimumArbiterHolding';
 import ApproveArbiter from '@/components/transactions/ApproveArbiter';
 import RejectArbiter from '@/components/transactions/RejectArbiter';
-import SetOwner from '@/components/transactions/SetOwner';
 import TransferOwnership from '@/components/transactions/TransferOwnership';
 import RenounceOwnership from '@/components/transactions/RenounceOwnership';
 
@@ -106,14 +102,6 @@ const AdminDashboard: React.FC = () => {
               onError={(error) => handleError('Platform fee update', error)}
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="text-white font-mono text-sm">Withdraw Fees</label>
-            <WithdrawFees
-              onSuccess={() => handleSuccess('Fee withdrawal')}
-              onError={(error) => handleError('Fee withdrawal', error)}
-            />
-          </div>
         </div>
 
         <div className="space-y-4">
@@ -147,7 +135,7 @@ const AdminDashboard: React.FC = () => {
               className="bg-[#333] border-gray-600"
             />
           </div>
-          <SetFactoryVariables
+          {/* <SetFactoryVariables
             minTradeAmount={factoryVars.minTradeAmount}
             maxTradeAmount={factoryVars.maxTradeAmount}
             defaultDisputeWindow={parseInt(factoryVars.defaultDisputeWindow) || 0}
@@ -155,7 +143,7 @@ const AdminDashboard: React.FC = () => {
             isPythSupportedNetwork={factoryVars.isPythSupportedNetwork}
             onSuccess={() => handleSuccess('Factory variables update')}
             onError={(error) => handleError('Factory variables update', error)}
-          />
+          /> */}
         </div>
 
         <div className="flex gap-4 mt-6">
@@ -193,14 +181,6 @@ const AdminDashboard: React.FC = () => {
               newFee={escrowCreationFee}
               onSuccess={() => handleSuccess('Escrow creation fee update')}
               onError={(error) => handleError('Escrow creation fee update', error)}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-white font-mono text-sm">Withdraw Escrow Fees</label>
-            <WithdrawEscrowFees
-              onSuccess={() => handleSuccess('Escrow fee withdrawal')}
-              onError={(error) => handleError('Escrow fee withdrawal', error)}
             />
           </div>
         </div>
@@ -275,12 +255,7 @@ const AdminDashboard: React.FC = () => {
               placeholder="0x..."
               className="bg-[#333] border-gray-600"
             />
-            <div className="flex gap-2">
-              <SetOwner
-                newOwner={newOwner}
-                onSuccess={() => handleSuccess('Owner update')}
-                onError={(error) => handleError('Owner update', error)}
-              />
+            <div className="flex ">
               <TransferOwnership
                 newOwner={newOwner}
                 onSuccess={() => handleSuccess('Ownership transfer')}

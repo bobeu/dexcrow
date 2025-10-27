@@ -95,7 +95,7 @@ const RenounceOwnership: React.FC<RenounceOwnershipProps> = ({
       <Button
         onClick={handleRenounceOwnership}
         disabled={isPending || isConfirming}
-        variant="destructive"
+        variant="danger"
         className="w-full"
       >
         {isPending || isConfirming ? 'Renouncing...' : 'Renounce Ownership'}

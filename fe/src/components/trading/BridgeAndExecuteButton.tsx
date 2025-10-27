@@ -7,10 +7,11 @@ import {
   bridgeAndDeposit,
   simulateBridgeAndCreateOrder,
   isChainSupported,
-  getContractAddress,
-  TRADEVERSE_SUPPORTED_CHAINS,
+  // getContractAddress,
+  // TRADEVERSE_SUPPORTED_CHAINS,
 } from '@/lib/nexus';
 import type { UserAssetDatum, BridgeAndExecuteResult } from '@avail-project/nexus-core';
+// import { filterTransactionData } from '@/utilities';
 
 interface BridgeAndExecuteButtonProps {
   token: UserAssetDatum;
@@ -57,11 +58,11 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
       return;
     }
 
-    const contractAddress = getContractAddress(toChainId, 'TradingAccount');
-    if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
-      onError?.(`TradingAccount contract not deployed on chain ${toChainId}`);
-      return;
-    }
+    // const contractAddress = getContractAddress(toChainId, 'TradingAccount');
+    // if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
+    //   onError?.(`TradingAccount contract not deployed on chain ${toChainId}`);
+    //   return;
+    // }
 
     try {
       setIsLoading(true);
@@ -138,7 +139,7 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
           toChainId,
           sourceChains,
           tokenAddress: orderParams?.tokenAddress || '0x0000000000000000000000000000000000000000',
-          userAddress: address,
+          _userAddress: address,
         });
       }
 

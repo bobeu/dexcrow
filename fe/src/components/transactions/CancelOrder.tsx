@@ -107,7 +107,7 @@ const CancelOrder: React.FC<CancelOrderProps> = ({
       <Button
         onClick={handleCancelOrder}
         disabled={isPending || isConfirming || !orderId}
-        variant="destructive"
+        variant="danger"
         className="w-full"
       >
         {isPending || isConfirming ? 'Canceling...' : 'Cancel Order'}

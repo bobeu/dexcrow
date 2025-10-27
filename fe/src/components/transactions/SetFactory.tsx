@@ -27,7 +27,7 @@ const SetFactory: React.FC<SetFactoryProps> = ({
     const { transactionData } = filterTransactionData({
       chainId,
       filter: true,
-      functionNames: ['setFactory']
+      functionNames: ['setFactory'] 
     });
     const td = transactionData[0];
     return {

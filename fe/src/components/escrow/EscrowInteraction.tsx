@@ -1,97 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { EscrowContractState, UserRole, EscrowState } from '@/lib/types';
-import { ContractService } from '@/lib/services/ContractService';
+import { UserRole, EscrowState, EscrowReadData, Address } from '@/lib/types';
 import ContractParameters from './ContractParameters';
 import InteractionPanel from './InteractionPanel';
 import DisputePanel from './DisputePanel';
 import StatusPanel from './StatusPanel';
 import { LoadEscrowForm } from '../forms';
-import { ArrowLeft, RefreshCw } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { formatAddr, toLower } from '@/utilities';
+import { useAccount } from 'wagmi';
+import { mockEscrowReadData } from '@/lib/types/mockdata';
 
 interface EscrowInteractionProps {
-  escrowState: EscrowContractState | null;
+  escrowData: EscrowReadData | null;
   onLoadEscrow: (contractAddress: string) => void;
   onContractAction: (action: string, ...args: any[]) => void;
   isLoading: boolean;
-  walletAddress: string;
-  contractService: ContractService | null;
+  contractAddress: Address;
 }
 
 const EscrowInteraction: React.FC<EscrowInteractionProps> = ({
-  escrowState,
+  escrowData,
   onLoadEscrow,
-  onContractAction,
+  // onContractAction,
+  contractAddress,
   isLoading,
-  walletAddress,
-  contractService
 }) => {
+  const { isConnected, address } = useAccount();
+  const account = formatAddr(address).toLowerCase();
   const [userRole, setUserRole] = useState<UserRole>('None');
-  const [disputeInfo, setDisputeInfo] = useState<any>(null);
-  const [isExpired, setIsExpired] = useState(false);
-  const [balance, setBalance] = useState('0');
+
+  const appReady = React.useMemo(() => {
+    return isConnected && address !== undefined && escrowData;
+  }, [isConnected, address, escrowData]);
 
   // Determine user role
   useEffect(() => {
-    if (!escrowState || !walletAddress) {
-      setUserRole('None');
-      return;
-    }
-
-    if (walletAddress.toLowerCase() === escrowState.buyer.toLowerCase()) {
-      setUserRole('Buyer');
-    } else if (walletAddress.toLowerCase() === escrowState.seller.toLowerCase()) {
-      setUserRole('Seller');
-    } else if (walletAddress.toLowerCase() === escrowState.arbiter.toLowerCase()) {
-      setUserRole('Arbiter');
-    } else {
-      setUserRole('Viewer');
-    }
-  }, [escrowState, walletAddress]);
-
-  // Load additional escrow data
-  useEffect(() => {
-    if (!escrowState || !contractService) return;
-
-    const loadEscrowData = async () => {
-      try {
-        // Check if expired
-        const expired = await contractService.isEscrowExpired(escrowState.contractAddress!);
-        setIsExpired(expired);
-
-        // Get balance
-        const escrowBalance = await contractService.getEscrowBalance(escrowState.contractAddress!);
-        setBalance(escrowBalance);
-
-        // Get dispute info if in dispute state
-        if (escrowState.currentState === EscrowState.DISPUTE_RAISED) {
-          const dispute = await contractService.getDisputeInfo(escrowState.contractAddress!);
-          setDisputeInfo(dispute);
-        }
-      } catch (error) {
-        console.error('Failed to load escrow data:', error);
+    let role : UserRole = 'None';
+    if(escrowData && isConnected) {
+      switch (account) {
+        case toLower(escrowData.escrowDetails.buyer):
+          role = 'Buyer';
+          break;
+        case toLower(escrowData.escrowDetails.seller):
+          role = 'Seller';
+          break;
+        case toLower(escrowData.escrowDetails.arbiter):
+          role = 'Arbiter';
+          break;
+        default:
+          role = 'Viewer';
+          break;
       }
-    };
-
-    loadEscrowData();
-  }, [escrowState, contractService]);
-
-  const handleRefresh = async () => {
-    if (!escrowState || !contractService) return;
-
-    try {
-      const newState = await contractService.getEscrowState(escrowState.contractAddress!);
-      // Update parent state
-      onLoadEscrow(escrowState.contractAddress!);
-    } catch (error) {
-      console.error('Failed to refresh escrow state:', error);
-    }
-  };
+    } 
+    setUserRole(role);
+  }, [escrowData, isConnected, account]);
 
   const handleBackToCreate = () => {
     onLoadEscrow(''); // Clear current escrow
   };
 
-  if (!escrowState) {
+  if(!appReady) {
     return (
       <div className="bg-[#1a1a1a] rounded-lg shadow-sm border border-[#333] p-6 hover:border-[#ffff00] transition-colors">
         <LoadEscrowForm onLoadEscrow={onLoadEscrow} isLoading={isLoading} />
@@ -114,7 +82,7 @@ const EscrowInteraction: React.FC<EscrowInteractionProps> = ({
             <h2 className="text-xl font-semibold text-white font-mono tracking-wide">Escrow Interaction</h2>
           </div>
           
-          <div className="flex items-center space-x-3">
+          {/* <div className="flex items-center space-x-3">
             <button
               onClick={handleRefresh}
               disabled={isLoading}
@@ -123,42 +91,40 @@ const EscrowInteraction: React.FC<EscrowInteractionProps> = ({
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
-          </div>
+          </div> */}
         </div>
 
         <StatusPanel 
-          escrowState={escrowState}
+          escrowDetails={escrowData?.escrowDetails || mockEscrowReadData.escrowDetails}
           userRole={userRole}
-          isExpired={isExpired}
-          balance={balance}
+          contractAddress={contractAddress}
         />
       </div>
 
       {/* Contract Parameters */}
       <ContractParameters 
-        escrowState={escrowState}
-        userRole={userRole}
-        isExpired={isExpired}
+        escrowDetails={escrowData?.escrowDetails || mockEscrowReadData.escrowDetails}
+        contractAddress={contractAddress}
       />
 
       {/* Dispute Panel */}
-      {escrowState.currentState === EscrowState.DISPUTE_RAISED && (
+      {escrowData?.escrowDetails.state === EscrowState.DISPUTE_RAISED && (
         <DisputePanel 
-          disputeInfo={disputeInfo}
-          userRole={userRole}
-          onResolveDispute={(releaseFunds, reasoning) => 
-            onContractAction('resolveDispute', releaseFunds, reasoning)
-          }
-          isLoading={isLoading}
+          contractAddress={contractAddress}
+          data={escrowData.disputeInfo}
+          escrowDetail={escrowData.escrowDetails}
+          // onResolveDispute={(releaseFunds, reasoning) => 
+          //   onContractAction('resolveDispute', releaseFunds, reasoning)
+          // }
+          // isLoading={isLoading}
         />
       )}
 
       {/* Interaction Panel */}
       <InteractionPanel 
-        escrowState={escrowState}
+        escrowState={escrowData || mockEscrowReadData}
         userRole={userRole}
-        isExpired={isExpired}
-        onContractAction={onContractAction}
+        // onContractAction={onContractAction}
         isLoading={isLoading}
       />
     </div>

@@ -5,9 +5,9 @@ import { useAccount } from 'wagmi';
 import TokenSelector from './TokenSelector';
 import BridgeAndExecuteButton from './BridgeAndExecuteButton';
 import { 
-  getUnifiedBalance,
+  // getUnifiedBalance,
   isChainSupported,
-  getContractAddress,
+  // getContractAddress,
   TRADEVERSE_SUPPORTED_CHAINS
 } from '@/lib/nexus';
 import type { UserAssetDatum, BridgeAndExecuteResult } from '@avail-project/nexus-core';
@@ -44,7 +44,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     nickname: '',
   });
   const [showTokenSelector, setShowTokenSelector] = useState(false);
-  const [isExecuting, setIsExecuting] = useState(false);
+  // const [isExecuting, setIsExecuting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -133,12 +133,12 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     }
 
     const toChainId = supportedBreakdown.chain.id;
-    const contractAddress = getContractAddress(toChainId, 'TradingAccount');
+    // const contractAddress = getContractAddress(toChainId, 'TradingAccount');
     
-    if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
-      setError(`TradingAccount contract not deployed on ${supportedBreakdown.chain.name}`);
-      return;
-    }
+    // if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
+    //   setError(`TradingAccount contract not deployed on ${supportedBreakdown.chain.name}`);
+    //   return;
+    // }
 
     // Prepare order data
     const orderData = {
@@ -365,7 +365,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               <BridgeAndExecuteButton
                 token={formData.token}
                 amount={formData.amount}
-                toChainId={formData.token.breakdown.find(b => isChainSupported(b.chain.id))?.chain.id || TRADEVERSE_SUPPORTED_CHAINS.ETHEREUM}
+                toChainId={formData.token.breakdown.find(b => isChainSupported(b.chain.id))?.chain.id || TRADEVERSE_SUPPORTED_CHAINS[1]}
                 action="createOrder"
                 orderParams={{
                   tokenAddress: formData.token.breakdown.find(b => isChainSupported(b.chain.id))?.contractAddress || '0x0000000000000000000000000000000000000000',

@@ -102,7 +102,7 @@ const PauseUnpause: React.FC<PauseUnpauseProps> = ({
       <Button
         onClick={handleAction}
         disabled={isPending || isConfirming || isDisabled}
-        variant={action === 'pause' ? 'destructive' : 'primary'}
+        variant={action === 'pause' ? 'danger' : 'primary'}
         className="w-full"
       >
         {isPending || isConfirming ? 

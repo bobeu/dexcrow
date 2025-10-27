@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseEther, parseUnits, zeroAddress } from 'viem';
+import { parseUnits, zeroAddress } from 'viem';
 import { Button } from '@/components/ui';
 import { useChainId } from 'wagmi';
 import TransactionModal from '@/components/modals/TransactionModal';
 import { 
   bridgeAndCreateEscrow, 
   simulateBridgeAndCreateEscrow,
-  getUnifiedBalances,
+  // getUnifiedBalances,
 } from '@/lib/nexus';
 import { Address, BridgeAndCreateEscrowParams, FunctionName } from '@/lib/types';
 import { filterTransactionData, formatAddr } from '@/utilities';

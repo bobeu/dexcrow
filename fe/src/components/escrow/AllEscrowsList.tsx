@@ -4,21 +4,13 @@ import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext
 import { Card, Badge, Button } from '@/components/ui';
 import { Clock, Users, DollarSign, CheckCircle, XCircle, AlertTriangle, Eye } from 'lucide-react';
 import { EscrowState, EscrowReadData } from '@/lib/types';
+import { zeroAddress } from 'viem';
+import { formatAmount, formatTime, isExpired } from '@/utilities';
 
 const AllEscrowsList: React.FC = () => {
   const { address } = useAccount();
   const { allEscrows } = useDataContext();
   const [selectedEscrow, setSelectedEscrow] = useState<EscrowReadData | null>(null);
-
-  const formatTime = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) * 1000);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
-
-  const formatAmount = (amount: bigint, decimals: number = 18) => {
-    const formatted = Number(amount) / Math.pow(10, decimals);
-    return formatted.toFixed(4);
-  };
 
   const getStateIcon = (state: EscrowState) => {
     switch (state) {
@@ -72,11 +64,11 @@ const AllEscrowsList: React.FC = () => {
   };
 
   const getUserRole = (escrow: EscrowReadData) => {
-    if (!address) return 'Viewer';
+    if(!address || address === zeroAddress) return 'Viewer';
     const userAddress = address.toLowerCase();
-    if (escrow.escrowDetails.buyer.toLowerCase() === userAddress) return 'Buyer';
-    if (escrow.escrowDetails.seller.toLowerCase() === userAddress) return 'Seller';
-    if (escrow.escrowDetails.arbiter.toLowerCase() === userAddress) return 'Arbiter';
+    if(escrow.escrowDetails.buyer.toLowerCase() === userAddress) return 'Buyer';
+    if(escrow.escrowDetails.seller.toLowerCase() === userAddress) return 'Seller';
+    if(escrow.escrowDetails.arbiter.toLowerCase() === userAddress) return 'Arbiter';
     return 'Viewer';
   };
 
@@ -98,10 +90,6 @@ const AllEscrowsList: React.FC = () => {
       default:
         return false;
     }
-  };
-
-  const isExpired = (deadline: bigint) => {
-    return Number(deadline) < Math.floor(Date.now() / 1000);
   };
 
   return (
