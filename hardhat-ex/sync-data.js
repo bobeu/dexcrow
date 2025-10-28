@@ -13,6 +13,8 @@ const erc20Artifacts = require('./artifacts/contracts/MockERC20.sol/MockERC20.js
 const escrowAccountArtifacts = require('./artifacts/contracts/escrow/Escrow.sol/Escrow.json');
 const arbitatorsArtifacts = require('./artifacts/contracts/escrow/Arbitrators.sol/Arbitrators.json')
 const tradeAccountArtifacts = require('./artifacts/contracts/trading/peripherals/TradingAccount.sol/TradingAccount.json');
+const tradeFactoryArtifacts = require('./artifacts/contracts/trading/TradeFactory.sol/TradeFactory.json');
+const escrowFactoryArtifacts = require('./artifacts/contracts/escrow/EscrowFactory.sol/EscrowFactory.json');
 // import erc20Artifacts from './artifacts/contracts/MockERC20.sol/MockERC20.json';
 // import escrowAccountArtifacts from './artifacts/contracts/escrow/Escrow.sol/Escrow.json';
 // import tradeAccountArtifacts from './artifacts/contracts/trading/peripherals/TradingAccount.sol/TradingAccount.json';
@@ -29,6 +31,8 @@ const ERC20_ARTIFACTS_PATH = '../fe/contractsArtifacts/erc20Template.json';
 const ESCROW_ARTIFACTS_PATH = '../fe/contractsArtifacts/escrowTemplate.json';
 const TRADING_ARTIFACTS_PATH = '../fe/contractsArtifacts/tradeAccountTemplate.json';
 const ARBITRATORS_ARTIFACTS_PATH = '../fe/contractsArtifacts/arbitratorsTemplate.json';
+const ESCROW_FACTORY_ARTIFCTS_PATH = '../fe/contractsArtifacts/esrcrowFactory.json';
+const TRADE_FACTORY_ARTIFCTS_PATH = '../fe/contractsArtifacts/tradeFactory.json';
 
 const approvedFunctions = [
     // Arbitrators functions
@@ -207,6 +211,8 @@ try {
     fs.writeFileSync(ESCROW_ARTIFACTS_PATH, JSON.stringify(escrowAccountArtifacts, null, 2));
     fs.writeFileSync(TRADING_ARTIFACTS_PATH, JSON.stringify(tradeAccountArtifacts, null, 2));
     fs.writeFileSync(ARBITRATORS_ARTIFACTS_PATH, JSON.stringify(arbitatorsArtifacts, null, 2));
+    fs.writeFileSync(ESCROW_FACTORY_ARTIFCTS_PATH, JSON.stringify(escrowFactoryArtifacts, null, 2));
+    fs.writeFileSync(TRADE_FACTORY_ARTIFCTS_PATH, JSON.stringify(tradeFactoryArtifacts, null, 2));
 
     // Removed template and ERC20 file writes as they're not used in this project
     console.log("✅ Data synchronization completed!");

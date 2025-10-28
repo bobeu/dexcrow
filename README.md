@@ -1,6 +1,6 @@
 # TradeVerse - Decentralized Trading & Escrow Platform
 
-TradeVerse is a comprehensive decentralized trading and escrow platform built on Base blockchain, integrating advanced technologies to provide seamless cross-chain trading, secure escrow services, and real-time price feeds. The platform enables users to trade cryptocurrencies and create escrow contracts with built-in dispute resolution mechanisms.
+TradeVerse is a comprehensive decentralized trading and escrow platform built on the blockchain, integrating advanced technologies to provide seamless cross-chain trading, secure escrow services, and real-time price feeds. The platform enables users to trade cryptocurrencies and create escrow contracts with built-in dispute resolution mechanisms.
 
 ## Architecture Overview
 
