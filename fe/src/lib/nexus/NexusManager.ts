@@ -10,9 +10,9 @@ import {
   type SimulationResult,
   type BridgeAndExecuteSimulationResult,
   SUPPORTED_CHAINS_IDS,
-  NexusNetwork
 } from '@avail-project/nexus-core';
-import { EIP1193Provider, parseUnits } from 'viem';
+import { parseUnits } from 'viem';
+import { mockUnifiedBalances } from '../types/mockdata';
 
 // TradeVerse supported chains
 export const TRADEVERSE_SUPPORTED_CHAINS = [
@@ -36,84 +36,40 @@ export const TOKEN_METADATA = {
 } as const;
 
 export class NexusManager {
-  private sdk: NexusSDK | null = null;
   private chainId: number;
-  private isInitialized: boolean = false;
 
   constructor(chainId: number = 8453) {
     this.chainId = chainId;
   }
 
-  // Set the SDK instance from NexusProvider
-  setSDK(sdk: NexusSDK | null): void {
-    this.sdk = sdk;
-    this.isInitialized = sdk?.isInitialized() === true;
-  }
-
-  // Initialize the SDK with a provider (for backward compatibility)
-  async initialize(provider: EIP1193Provider): Promise<void> {
-    if (!provider) {
-      throw new Error('No EIP-1193 provider (e.g., MetaMask) found');
-    }
-    
-    if (this.isInitialized) {
-      return;
-    }
-   
-    if (!this.sdk) {
-      const network: NexusNetwork = this.chainId === 8453 || this.chainId === 1 ? "mainnet" : "testnet";
-      this.sdk = new NexusSDK({ network });
-    }
-    
-    await this.sdk.initialize(provider as unknown as any);
-    this.isInitialized = true;
-  }
-
-  // Deinitialize the SDK
-  async deinitialize(): Promise<void> {
-    if (!this.isInitialized || !this.sdk) {
-      return;
-    }
-   
-    await this.sdk.deinit();
-    this.isInitialized = false;
-  }
-
-  // Check if SDK is initialized
-  get initialized(): boolean {
-    return this.isInitialized && this.sdk?.isInitialized() === true;
-  }
-
   // Get unified balances across all chains
-  async getUnifiedBalances(): Promise<UserAssetDatum[]> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
+  async getUnifiedBalances(sdk: NexusSDK): Promise<UserAssetDatum[]> {
+    let unifiedBalances = [mockUnifiedBalances];
+    if (sdk.isInitialized()) {
+      unifiedBalances = await sdk.getUnifiedBalances();
     }
-    return await this.sdk.getUnifiedBalances();
+    return unifiedBalances;
   }
 
   // Get unified balance for a specific token
-  async getUnifiedBalance(symbol: string): Promise<UserAssetDatum | undefined> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
+  async getUnifiedBalance(symbol: string, sdk: NexusSDK): Promise<UserAssetDatum | undefined> {
+    let unifiedBalance : UserAssetDatum | undefined = mockUnifiedBalances;
+    if(sdk.isInitialized()) {
+      unifiedBalance = await sdk.getUnifiedBalance(symbol);
     }
-    return await this.sdk.getUnifiedBalance(symbol);
+    return unifiedBalance;
   }
 
   // Bridge tokens
-  async bridge(params: BridgeParams): Promise<BridgeResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
-    return await this.sdk.bridge(params);
+  async bridge(params: BridgeParams, sdk: NexusSDK): Promise<BridgeResult | undefined> {
+    if(!sdk.isInitialized()) return;
+    return await sdk.bridge(params);
   }
 
   // Simulate bridge
-  async simulateBridge(params: BridgeParams): Promise<SimulationResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
-    return await this.sdk.simulateBridge(params);
+  async simulateBridge(params: BridgeParams, sdk: NexusSDK): Promise<SimulationResult | undefined> {
+    if(!sdk.isInitialized()) return;
+    return await sdk.simulateBridge(params);
   }
 
   // Bridge and create order
@@ -126,10 +82,8 @@ export class NexusManager {
     price: string;
     expirationHours: number;
     userAddress: string;
-  }): Promise<BridgeAndExecuteResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
+  }, sdk: NexusSDK): Promise<BridgeAndExecuteResult | undefined> {
+    if(!sdk.isInitialized()) return;
     const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createOrder']});
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
       token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
@@ -155,7 +109,7 @@ export class NexusManager {
       waitForReceipt: true,
     };
 
-    return await this.sdk.bridgeAndExecute(bridgeAndExecuteParams);
+    return await sdk.bridgeAndExecute(bridgeAndExecuteParams);
   }
 
   // Bridge and deposit
@@ -166,10 +120,8 @@ export class NexusManager {
     sourceChains?: number[];
     tokenAddress: string;
     _userAddress: string;
-  }): Promise<BridgeAndExecuteResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
+  }, sdk: NexusSDK): Promise<BridgeAndExecuteResult | undefined> {
+    if(!sdk.isInitialized()) return;
 
     const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['deposit']});
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
@@ -194,7 +146,7 @@ export class NexusManager {
       waitForReceipt: true,
     };
 
-    return await this.sdk.bridgeAndExecute(bridgeAndExecuteParams);
+    return await sdk.bridgeAndExecute(bridgeAndExecuteParams);
   }
 
   // Bridge and create escrow
@@ -211,10 +163,8 @@ export class NexusManager {
     description: string;
     disputeWindowHours: number;
     userAddress: string;
-  }): Promise<BridgeAndExecuteResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
+  }, sdk: NexusSDK): Promise<BridgeAndExecuteResult | undefined> {
+    if(!sdk.isInitialized()) return;
 
     const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createEscrow']});
 
@@ -250,7 +200,7 @@ export class NexusManager {
       waitForReceipt: true,
     };
 
-    return await this.sdk.bridgeAndExecute(bridgeAndExecuteParams);
+    return await sdk.bridgeAndExecute(bridgeAndExecuteParams);
   }
 
   // Simulate bridge and create order
@@ -263,10 +213,8 @@ export class NexusManager {
     price: string;
     expirationHours: number;
     userAddress: string;
-  }): Promise<BridgeAndExecuteSimulationResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
+  }, sdk: NexusSDK): Promise<BridgeAndExecuteSimulationResult | undefined> {
+    if(!sdk.isInitialized()) return;
 
     const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createOrder']});
 
@@ -294,7 +242,7 @@ export class NexusManager {
       waitForReceipt: true,
     };
 
-    return await this.sdk.simulateBridgeAndExecute(bridgeAndExecuteParams);
+    return await sdk.simulateBridgeAndExecute(bridgeAndExecuteParams);
   }
 
   // Simulate bridge and create escrow
@@ -311,10 +259,8 @@ export class NexusManager {
     description: string;
     disputeWindowHours: number;
     userAddress: string;
-  }): Promise<BridgeAndExecuteSimulationResult> {
-    if (!this.initialized || !this.sdk) {
-      throw new Error('SDK not initialized');
-    }
+  }, sdk: NexusSDK): Promise<BridgeAndExecuteSimulationResult | undefined> {
+    if(!sdk.isInitialized()) return;
 
     const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createEscrow']});
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
@@ -349,7 +295,7 @@ export class NexusManager {
       waitForReceipt: true,
     };
 
-    return await this.sdk.simulateBridgeAndExecute(bridgeAndExecuteParams);
+    return await sdk.simulateBridgeAndExecute(bridgeAndExecuteParams);
   }
 
   // Utility functions
@@ -365,31 +311,10 @@ export class NexusManager {
     return TOKEN_METADATA[symbol as keyof typeof TOKEN_METADATA];
   }
 
-  // getContractAddress(chainId: number, contractType: 'TradeFactory' | 'TradingAccount' | 'EscrowFactory' | 'Arbitrators'): string | undefined {
-  //   return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]?.[contractType];
-  // }
-
   // Get current chain ID
   get currentChainId(): number {
     return this.chainId;
   }
 
-  // Update chain ID and reinitialize if needed
-  async updateChainId(newChainId: number): Promise<void> {
-    if (this.chainId !== newChainId) {
-      const wasInitialized = this.isInitialized;
-      if (wasInitialized) {
-        await this.deinitialize();
-      }
-      
-      this.chainId = newChainId;
-      const network: NexusNetwork = newChainId === 8453 || newChainId === 1 ? "mainnet" : "testnet";
-      this.sdk = new NexusSDK({ network });
-      
-      // Note: Re-initialization would need to be done by the caller with a provider
-    }
-  }
 }
 
-// Export singleton instance
-export const nexusManager = new NexusManager();

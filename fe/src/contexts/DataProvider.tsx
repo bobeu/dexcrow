@@ -8,6 +8,7 @@ import { useAccount, useChainId, useConfig, useReadContracts } from 'wagmi';
 import escrowTemplate from "../../contractsArtifacts/escrowTemplate.json";
 // import { abi as tradingAccountAbi } from "../../contractsArtifacts/tradeAccountTemplate.json";
 import { StorageContextProvider } from './StorageContextProvider';
+import { zeroAddress } from 'viem';
 
 export default function DataProvider({children} : {children: React.ReactNode}) {
   const [escrowFactoryData, setEscrowFactoryData] = React.useState<EscrowFactoryReadData>(mockEscrowfactoryReadData);
@@ -150,7 +151,7 @@ export default function DataProvider({children} : {children: React.ReactNode}) {
                 }
                 return {
                   ...result_,
-                  contractAddress: allEscrowReadObj[i].address
+                  contractAddress: allEscrowReadObj[i]?.address || zeroAddress
                 };
             });
         }

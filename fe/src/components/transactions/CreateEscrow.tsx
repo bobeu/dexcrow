@@ -12,6 +12,7 @@ import {
 import { Address, BridgeAndCreateEscrowParams, FunctionName } from '@/lib/types';
 import { filterTransactionData, formatAddr } from '@/utilities';
 import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext';
+import { useNexus } from '@/contexts/NexusProvider';
 
 interface CreateEscrowProps {
   buyerAddress: string;
@@ -48,6 +49,7 @@ const CreateEscrow: React.FC<CreateEscrowProps> = ({
   const chainId = useChainId();
   const { address, isConnected } = useAccount();
   const account = formatAddr(address);
+  const { nexusManager, nexusSDK } = useNexus();
   const { escrowFactoryData: { creationFee } } = useDataContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -80,7 +82,7 @@ const CreateEscrow: React.FC<CreateEscrowProps> = ({
   });
 
   const handleCreateEscrow = async () => {
-    if (!address || !isConnected) {
+    if (!address || !isConnected || !nexusManager || !nexusSDK) {
       setError('Wallet not connected');
       return;
     }
@@ -127,12 +129,12 @@ const CreateEscrow: React.FC<CreateEscrowProps> = ({
 
         // Simulate first
         setIsSimulating(true);
-        const simulation = await simulateBridgeAndCreateEscrow(bridgeParams);
-        setMessage(`This transaction will cost ${simulation.totalEstimatedCost?.total}`);
+        const simulation = await simulateBridgeAndCreateEscrow(bridgeParams, nexusManager, nexusSDK);
+        setMessage(`This transaction will cost ${simulation?.totalEstimatedCost?.total}`);
         setIsSimulating(false);
 
         // Execute bridge and create escrow
-        const result = await bridgeAndCreateEscrow(bridgeParams);
+        const result = await bridgeAndCreateEscrow(bridgeParams, nexusManager, nexusSDK);
         setTxHash(result?.bridgeTransactionHash || '0x');
       } else {
         // Direct contract call for same-chain tokens

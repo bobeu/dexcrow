@@ -12,6 +12,7 @@ import {
   // SUPPORTED_TOKENS,
 } from '@/lib/nexus';
 import { type UserAssetDatum } from '@avail-project/nexus-core';
+import { useNexus } from '@/contexts/NexusProvider';
 // import { parseUnits } from 'viem';
 
 interface TokenSelectorProps {
@@ -42,6 +43,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   selectedToken
 }) => {
   const { address, isConnected } = useAccount();
+  const { nexusManager, nexusSDK } = useNexus();
   const [tokens, setTokens] = useState<UserAssetDatum[]>([]);
   const [filteredTokens, setFilteredTokens] = useState<UserAssetDatum[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,23 +84,25 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   }, [tokens, searchTerm, selectedChain]);
 
   const loadTokens = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const balances = await getUnifiedBalances();
-      
-      // Filter only supported tokens
-      const supportedTokens = balances.filter(token => 
-        isTokenSupported(token.symbol)
-      );
-      
-      setTokens(supportedTokens);
-    } catch (err) {
-      console.error('Error loading tokens:', err);
-      setError('Failed to load token balances. Please try again.');
-    } finally {
-      setIsLoading(false);
+    if(nexusManager && nexusSDK){
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const balances = await getUnifiedBalances(nexusManager, nexusSDK);
+        
+        // Filter only supported tokens
+        const supportedTokens = balances.filter(token => 
+          isTokenSupported(token.symbol, nexusManager)
+        );
+        
+        setTokens(supportedTokens);
+      } catch (err) {
+        console.error('Error loading tokens:', err);
+        setError('Failed to load token balances. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 

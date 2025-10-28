@@ -130,9 +130,9 @@ import DataProvider from "./DataProvider";
 //   }),
 // );
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID as string;
-console.log("NEXT_PUBLIC_PROJECT_ID", process.env);
-console.log("NEXT_PUBLIC_FAST_REFRESH", process.env.NEXT_PUBLIC_FAST_REFRESH);
-console.log("CELOSCAN_API", process.env.CELOSCAN_API);
+// console.log("NEXT_PUBLIC_PROJECT_ID", process.env);
+// console.log("NEXT_PUBLIC_FAST_REFRESH", process.env.NEXT_PUBLIC_FAST_REFRESH);
+// console.log("CELOSCAN_API", process.env.CELOSCAN_API);
 
 // Provide a fallback project ID for development
 const fallbackProjectId = "your_walletconnect_project_id_here";
@@ -155,7 +155,7 @@ const config = getDefaultConfig({
   projectId: finalProjectId,
   appIcon: 'https://dexcrow.vercel.app/dexcrow-logo.png',
   appDescription: "Decentralized trading universe",
-  appUrl: "https://tradeverse.vercel.app",
+  appUrl: "https://dexcrow.vercel.app",
   chains: [mainnet, sepolia, baseSepolia, base],
   ssr: true,
   multiInjectedProviderDiscovery: true,

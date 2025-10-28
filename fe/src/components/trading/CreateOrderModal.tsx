@@ -11,6 +11,8 @@ import {
   TRADEVERSE_SUPPORTED_CHAINS
 } from '@/lib/nexus';
 import type { UserAssetDatum, BridgeAndExecuteResult } from '@avail-project/nexus-core';
+import { useNexus } from '@/contexts/NexusProvider';
+import { zeroAddress } from 'viem';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -34,6 +36,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   onSubmit
 }) => {
   const { address, isConnected } = useAccount();
+  const { nexusManager } = useNexus();
   const [formData, setFormData] = useState<OrderFormData>({
     token: null,
     amount: '',
@@ -107,14 +110,14 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       return;
     }
 
-    if (!isConnected || !address) {
+    if (!isConnected || !address || !nexusManager) {
       setError('Please connect your wallet first');
       return;
     }
 
     // Check if token needs bridging
     const needsBridging = !formData.token?.breakdown.some(b => 
-      isChainSupported(b.chain.id)
+      isChainSupported(b.chain.id, nexusManager)
     );
 
     if (needsBridging) {
@@ -124,7 +127,7 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
     // Find the best chain for the token
     const supportedBreakdown = formData.token?.breakdown.find(b => 
-      isChainSupported(b.chain.id)
+      isChainSupported(b.chain.id, nexusManager)
     );
 
     if (!supportedBreakdown) {
@@ -133,12 +136,6 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     }
 
     const toChainId = supportedBreakdown.chain.id;
-    // const contractAddress = getContractAddress(toChainId, 'TradingAccount');
-    
-    // if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
-    //   setError(`TradingAccount contract not deployed on ${supportedBreakdown.chain.name}`);
-    //   return;
-    // }
 
     // Prepare order data
     const orderData = {
@@ -365,10 +362,10 @@ const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               <BridgeAndExecuteButton
                 token={formData.token}
                 amount={formData.amount}
-                toChainId={formData.token.breakdown.find(b => isChainSupported(b.chain.id))?.chain.id || TRADEVERSE_SUPPORTED_CHAINS[1]}
+                toChainId={formData.token.breakdown.find(b => isChainSupported(b.chain.id, nexusManager!))?.chain.id || TRADEVERSE_SUPPORTED_CHAINS[1]}
                 action="createOrder"
                 orderParams={{
-                  tokenAddress: formData.token.breakdown.find(b => isChainSupported(b.chain.id))?.contractAddress || '0x0000000000000000000000000000000000000000',
+                  tokenAddress: formData.token.breakdown.find(b => isChainSupported(b.chain.id, nexusManager!))?.contractAddress || zeroAddress,
                   price: formData.useLivePrice ? '0' : formData.price,
                   expirationHours: formData.expirationHours,
                 }}

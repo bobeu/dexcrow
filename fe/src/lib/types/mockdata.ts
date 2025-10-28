@@ -1,6 +1,7 @@
 import { Hex, hexToString, stringToHex, zeroAddress } from "viem";
 import { Address, ArbitratorsReadData, EscrowDetails, EscrowFactoryReadData, EscrowReadData, EscrowState, FormattedEscrowDetails, TradeFactoryReadData, UserEscrowReadData } from ".";
 import { formatAmount, formatDate, toLower, toNum } from "@/utilities";
+import { UserAssetDatum } from "@avail-project/nexus-core";
 
 const encodeAssetame = stringToHex('USDC Coin');
 const encodedSymbol = stringToHex('USDC');
@@ -175,4 +176,25 @@ export const mockUserEscrowFiltered : FormattedEscrowDetails[] = [
 export const mockUserEscrowReadData : UserEscrowReadData = {
     contractAddress: zeroAddress,
     ...mockEscrowReadData
+}
+
+export const mockUnifiedBalances : UserAssetDatum = {
+    balance: "0",
+    balanceInFiat: 0,
+    breakdown: [
+        {
+            balance: "0",
+            balanceInFiat: 0,
+            chain: {
+                id: 0,
+                logo: "none",
+                name: "None"
+            },
+            contractAddress: zeroAddress,
+            decimals: 18,
+            universe: 1
+        }
+    ],
+    decimals: 0,
+    symbol: ""
 }
