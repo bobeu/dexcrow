@@ -3,25 +3,25 @@
  * Handles communication with uAgents on Agentverse
  */
 
-import { ethers } from 'ethers';
+// import { ethers } from 'ethers';
 import { 
-  AgentMessage, 
+  // AgentMessage, 
   EscrowData, 
   AgentCapabilities, 
   CreateEscrowRequest,
-  CreateEscrowResponse,
-  DepositRequest,
-  DepositConfirmation,
-  FulfillmentRequest,
-  FulfillmentConfirmation,
-  ReleaseRequest,
-  RefundRequest,
-  ReleaseConfirmation,
-  DisputeRequest,
-  DisputeResponse,
-  FrontendNotification,
+  // CreateEscrowResponse,
+  // DepositRequest,
+  // DepositConfirmation,
+  // FulfillmentRequest,
+  // FulfillmentConfirmation,
+  // ReleaseRequest,
+  // RefundRequest,
+  // ReleaseConfirmation,
+  // DisputeRequest,
+  // DisputeResponse,
+  // FrontendNotification,
   FrontendCallback,
-  EscrowStatusUpdate
+  // EscrowStatusUpdate
 } from '../types';
 
 export class AgentClient {

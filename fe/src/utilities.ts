@@ -4,6 +4,8 @@ import { Address, FilterTransactionDataProps, FilterTransactionReturnType, Funct
 import { getFunctionData } from "./contractData/functionData";
 import BigNumber from "bignumber.js";
 import globalContractData from "../contractsArtifacts/global.json";
+import escrowFactoryArtifacts from "../contractsArtifacts/esrcrowFactory.json";
+import tradeFactoryArtifacts from "../contractsArtifacts/tradeFactory.json";
 
 export interface TrxnData {
   contractAddress: Address;
@@ -81,6 +83,53 @@ export const formatAddr = (x: string | undefined) : Address => {
     return `0x${x.substring(2, x.length)}`;
 };
 
+export const truncateAddress = (address: string) => {
+  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+};
+
+export const formatDate = (timestamp: number | bigint) => {
+  return new Date(toNum(timestamp) * 1000).toLocaleString();
+};
+
+export const formatTime = (timestamp: bigint | number) => {
+  const date = new Date(toNum(timestamp) * 1000);
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+};
+
+export const getTimeRemaining = (deadline: bigint) => {
+  const now = Math.floor(Date.now() / 1000);
+  const remaining = toNum(deadline) - now;
+  
+  if (remaining <= 0) return 'Expired';
+  
+  const days = Math.floor(remaining / (24 * 60 * 60));
+  const hours = Math.floor((remaining % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((remaining % (60 * 60)) / 60);
+  
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
+
+export const formatAmount = (amount: bigint, decimals: number = 18) => {
+  const formatted = Number(amount) / Math.pow(10, decimals);
+  return formatted.toFixed(4);
+};
+
+export const toNum = (arg: string | bigint | undefined | number) => {
+  return Number(arg);
+}
+
+export const isExpired = (deadline: bigint) => {
+  return Number(deadline) < Math.floor(Date.now() / 1000);
+};
+
+
+export const toLower = (arg: string | undefined) => {
+  if(arg === undefined) return "";
+  return arg.toLowerCase();
+}
+
 /**
  * @dev Filter transaction data such as abis, contract addresses, inputs etc. If the filter parameter is true, it creates transaction data for 
  * the parsed function names. Default to false.
@@ -103,5 +152,9 @@ export function filterTransactionData({chainId, filter, functionNames = []}: Fil
     transactionData,
     approvedFunctions,
     contractAddresses: contractAddresses[chainIndex],
+    othersAbis: {
+      escrowFactoryAbi: escrowFactoryArtifacts.abi,
+      tradefactoryAbi: tradeFactoryArtifacts.abi
+    }
   }
 }

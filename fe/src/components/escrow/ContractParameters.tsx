@@ -1,21 +1,22 @@
 import React from 'react';
-import { EscrowContractState, UserRole, EscrowState } from '@/lib/types';
-import { Copy, Check, Clock, Shield, User, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import {  EscrowState, Address, EscrowDetails } from '@/lib/types';
+import { Copy, Check, Clock, Shield, User } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
+import { formatAmount, formatDate, getTimeRemaining, isExpired, toLower, truncateAddress } from '@/utilities';
+import { zeroAddress } from 'viem';
 
 interface ContractParametersProps {
-  escrowState: EscrowContractState;
-  userRole: UserRole;
-  isExpired: boolean;
+  escrowDetails: EscrowDetails; 
+  contractAddress: Address;
 }
 
 const ContractParameters: React.FC<ContractParametersProps> = ({ 
-  escrowState, 
-  userRole, 
-  isExpired 
+  escrowDetails, 
+  contractAddress
 }) => {
   const [copiedField, setCopiedField] = React.useState<string | null>(null);
 
+  const isEscrowExpired = isExpired(escrowDetails.deadline);
   const handleCopy = async (text: string, field: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -26,48 +27,8 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
     }
   };
 
-  const formatAddress = (address: string) => {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
-
-  const formatAmount = (amount: number) => {
-    return (amount / 1e18).toFixed(4);
-  };
-
-  const getTimeRemaining = () => {
-    const now = Math.floor(Date.now() / 1000);
-    const remaining = escrowState.deadline - now;
-    
-    if (remaining <= 0) return 'Expired';
-    
-    const days = Math.floor(remaining / (24 * 60 * 60));
-    const hours = Math.floor((remaining % (24 * 60 * 60)) / (60 * 60));
-    const minutes = Math.floor((remaining % (60 * 60)) / 60);
-    
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
-
-  const getStateIcon = () => {
-    switch (escrowState.currentState) {
-      case EscrowState.AWAITING_DEPOSIT:
-        return <Clock className="w-5 h-5 text-[#ffff00]" />;
-      case EscrowState.AWAITING_FULFILLMENT:
-        return <Shield className="w-5 h-5 text-[#00ff00]" />;
-      case EscrowState.DISPUTE_RAISED:
-        return <AlertTriangle className="w-5 h-5 text-red-500" />;
-      case EscrowState.COMPLETED:
-        return <CheckCircle className="w-5 h-5 text-[#00ff00]" />;
-      case EscrowState.CANCELED:
-        return <XCircle className="w-5 h-5 text-[#666]" />;
-      default:
-        return <Clock className="w-5 h-5 text-[#666]" />;
-    }
-  };
-
   const getStateVariant = () => {
-    switch (escrowState.currentState) {
+    switch (escrowDetails.state) {
       case EscrowState.AWAITING_DEPOSIT:
         return 'warning';
       case EscrowState.AWAITING_FULFILLMENT:
@@ -84,7 +45,7 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
   };
 
   const getStateName = () => {
-    switch (escrowState.currentState) {
+    switch (escrowDetails.state) {
       case EscrowState.AWAITING_DEPOSIT:
         return 'Awaiting Deposit';
       case EscrowState.AWAITING_FULFILLMENT:
@@ -138,7 +99,7 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
         <span className="text-sm text-[#ffff00] font-mono">{label}</span>
       </div>
       <div className="flex items-center space-x-2">
-        <span className="font-mono text-sm text-white">{formatAddress(address)}</span>
+        <span className="font-mono text-sm text-white">{truncateAddress(address)}</span>
         <button
           onClick={() => handleCopy(address, fieldName)}
           className="p-1 hover:bg-[#ffff00] hover:text-[#1a1a1a] rounded transition-colors"
@@ -167,26 +128,26 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
           <div className="space-y-3">
             <InfoRow
               label="Contract Address"
-              value={formatAddress(escrowState.contractAddress!)}
+              value={truncateAddress(contractAddress!)}
               copyable
-              valueToCopy={escrowState.contractAddress!}
+              valueToCopy={contractAddress!}
             />
 
             <div className="flex items-center justify-between p-3 bg-[#333] rounded-lg border border-[#333] hover:border-[#ffff00] transition-colors">
               <span className="text-sm text-[#ffff00] font-mono">State</span>
-              <Badge variant={getStateVariant()} icon={getStateIcon}>
+              <Badge variant={getStateVariant()}>
                 {getStateName()}
               </Badge>
             </div>
 
             <InfoRow
               label="Trade Type"
-              value={escrowState.tradeType.replace('_', ' ').toUpperCase()}
+              value={toLower(escrowDetails.assetToken) === zeroAddress? 'ERC20' : 'NATIVE '}
             />
 
             <InfoRow
               label="Asset Amount"
-              value={`${formatAmount(escrowState.assetAmount)} ETH`}
+              value={`${formatAmount(escrowDetails.assetAmount)} ETH`}
             />
           </div>
         </div>
@@ -198,19 +159,19 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
           <div className="space-y-3">
             <PartyRow
               label="Buyer"
-              address={escrowState.buyer}
+              address={escrowDetails.buyer}
               icon={User}
               fieldName="buyer"
             />
             <PartyRow
               label="Seller"
-              address={escrowState.seller}
+              address={escrowDetails.seller}
               icon={User}
               fieldName="seller"
             />
             <PartyRow
               label="Arbiter"
-              address={escrowState.arbiter}
+              address={escrowDetails.arbiter}
               icon={Shield}
               fieldName="arbiter"
             />
@@ -227,12 +188,12 @@ const ContractParameters: React.FC<ContractParametersProps> = ({
           </div>
           <div className="text-right">
             <div className="text-sm text-white font-mono">
-              {new Date(escrowState.deadline * 1000).toLocaleString()}
+              {formatDate(escrowDetails.deadline)}
             </div>
             <div className={`text-xs font-medium font-mono ${
-              isExpired ? 'text-red-500' : 'text-[#ffff00]'
+              isEscrowExpired? 'text-red-500' : 'text-[#ffff00]'
             }`}>
-              {isExpired ? 'EXPIRED' : `Time remaining: ${getTimeRemaining()}`}
+              {isEscrowExpired? 'EXPIRED' : `Time remaining: ${getTimeRemaining(escrowDetails.deadline)}`}
             </div>
           </div>
         </div>

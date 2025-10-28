@@ -28,7 +28,7 @@ const SetEscrowCreationFee: React.FC<SetEscrowCreationFeeProps> = ({
     const { transactionData } = filterTransactionData({
       chainId,
       filter: true,
-      functionNames: ['setEscrowCreationFee']
+      functionNames: ['setCreationFee']
     });
     const td = transactionData[0];
     return {

@@ -3,6 +3,7 @@ import { useAccount } from 'wagmi';
 import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext';
 import { Card, Badge, Button } from '@/components/ui';
 import { TrendingUp, Users, DollarSign, Settings, Play, Pause } from 'lucide-react';
+import { Hex, hexToString } from 'viem';
 
 const TradingDashboard: React.FC = () => {
   const { address } = useAccount();
@@ -49,7 +50,7 @@ const TradingDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant={tradeFactoryData.isPaused ? 'error' : 'success'} className="font-mono">
+            <Badge variant={tradeFactoryData.isPaused ? 'danger' : 'success'} className="font-mono">
               {tradeFactoryData.isPaused ? 'Paused' : 'Active'}
             </Badge>
             {tradeFactoryData.isPaused ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -161,13 +162,13 @@ const TradingDashboard: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-white font-mono text-sm">Pyth Supported:</span>
-                  <Badge variant={tradeFactoryData.variables.isPythSupported ? 'success' : 'error'}>
+                  <Badge variant={tradeFactoryData.variables.isPythSupported ? 'success' : 'danger'}>
                     {tradeFactoryData.variables.isPythSupported ? 'Yes' : 'No'}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white font-mono text-sm">Status:</span>
-                  <Badge variant={tradeFactoryData.isPaused ? 'error' : 'success'}>
+                  <Badge variant={tradeFactoryData.isPaused ? 'danger' : 'success'}>
                     {tradeFactoryData.isPaused ? 'Paused' : 'Active'}
                   </Badge>
                 </div>
@@ -255,10 +256,10 @@ const TradingDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-white font-mono text-sm">
-                      <strong>Name:</strong> {String.fromCharCode(...tradeFactoryData.variables.supportedPaymentAsset.name)}
+                      <strong>Name:</strong> { hexToString(tradeFactoryData.variables.supportedPaymentAsset.name as Hex) }
                     </p>
                     <p className="text-white font-mono text-sm">
-                      <strong>Symbol:</strong> {String.fromCharCode(...tradeFactoryData.variables.supportedPaymentAsset.symbol)}
+                      <strong>Symbol:</strong> { hexToString(tradeFactoryData.variables.supportedPaymentAsset.symbol as Hex) }
                     </p>
                   </div>
                 </div>

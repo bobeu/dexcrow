@@ -107,7 +107,7 @@ const RaiseDispute: React.FC<RaiseDisputeProps> = ({
       <Button
         onClick={handleRaiseDispute}
         disabled={isPending || isConfirming || !reason || reason.trim().length === 0}
-        variant="destructive"
+        variant="danger"
         className="w-full"
       >
         {isPending || isConfirming ? 'Raising Dispute...' : 'Raise Dispute'}

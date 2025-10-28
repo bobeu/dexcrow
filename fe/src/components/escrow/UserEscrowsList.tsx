@@ -1,48 +1,37 @@
 import React from 'react';
-import { useDataContext } from '@/contexts/DataContextProvider';
 import { useAccount } from 'wagmi';
 import { Card, Badge, Button } from '@/components/ui';
 import { Clock, Users, DollarSign, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { EscrowState } from '@/lib/types';
+import { Address, EscrowState, UserEscrowReadData, Variant } from '@/lib/types';
+import { useDataContext } from '@/contexts/StorageContextProvider/useDataContext';
+import { formatAmount, formatTime, isExpired, toLower, truncateAddress } from '@/utilities';
+import { zeroAddress } from 'viem';
 
 const UserEscrowsList: React.FC = () => {
-  const { userEscrows, escrowDetails, isLoading } = useDataContext();
-  const { address } = useAccount();
+  const { userEscrows, isLoading } = useDataContext();
+  const account = toLower(useAccount().address);
 
   // Filter escrows where user is buyer or seller
   const userParticipatingEscrows = React.useMemo(() => {
-    if (!address) return [];
+    if (!account || account === '' || account === zeroAddress) return [];
     
-    const participating: Array<{ address: string; data: any; role: 'buyer' | 'seller' }> = [];
+    const participating: Array<{ address: Address; data: UserEscrowReadData; role: 'buyer' | 'seller' }> = [];
     
-    userEscrows.forEach((escrowAddress) => {
-      const escrowData = escrowDetails.get(escrowAddress);
-      if (escrowData) {
-        const isBuyer = escrowData.escrowDetails.buyer.toLowerCase() === address.toLowerCase();
-        const isSeller = escrowData.escrowDetails.seller.toLowerCase() === address.toLowerCase();
-        
-        if (isBuyer || isSeller) {
-          participating.push({
-            address: escrowAddress,
-            data: escrowData,
-            role: isBuyer ? 'buyer' : 'seller'
-          });
-        }
+    userEscrows.forEach((escrowData) => {
+      const {contractAddress, escrowDetails: { buyer, seller } } = escrowData;
+      const isBuyer = toLower(buyer) === account;
+      const isSeller =toLower(seller) === account;
+      if (isBuyer || isSeller) {
+        participating.push({
+          address: contractAddress,
+          data: escrowData,
+          role: isBuyer ? 'buyer' : 'seller'
+        });
       }
     });
     
     return participating;
-  }, [userEscrows, escrowDetails, address]);
-
-  const formatTime = (timestamp: bigint) => {
-    const date = new Date(Number(timestamp) * 1000);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-  };
-
-  const formatAmount = (amount: bigint, decimals: number = 18) => {
-    const formatted = Number(amount) / Math.pow(10, decimals);
-    return formatted.toFixed(4);
-  };
+  }, [userEscrows, account]);
 
   const getStateIcon = (state: EscrowState) => {
     switch (state) {
@@ -78,25 +67,21 @@ const UserEscrowsList: React.FC = () => {
     }
   };
 
-  const getStateVariant = (state: EscrowState) => {
+  const getStateVariant = (state: EscrowState) : Variant => {
     switch (state) {
       case EscrowState.AWAITING_DEPOSIT:
         return 'warning';
       case EscrowState.AWAITING_FULFILLMENT:
         return 'info';
       case EscrowState.DISPUTE_RAISED:
-        return 'error';
+        return 'danger';
       case EscrowState.COMPLETED:
         return 'success';
       case EscrowState.CANCELED:
-        return 'secondary';
+        return 'danger';
       default:
-        return 'secondary';
+        return 'default';
     }
-  };
-
-  const isExpired = (deadline: bigint) => {
-    return Number(deadline) < Math.floor(Date.now() / 1000);
   };
 
   if (isLoading) {
@@ -153,11 +138,11 @@ const UserEscrowsList: React.FC = () => {
                   </Badge>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant="outline" className="font-mono">
+                  <Badge variant="info" className="font-mono">
                     You are {role}
                   </Badge>
                   {isExpired(data.escrowDetails.deadline) && (
-                    <Badge variant="error">Expired</Badge>
+                    <Badge variant="danger">Expired</Badge>
                   )}
                 </div>
               </div>
@@ -168,13 +153,13 @@ const UserEscrowsList: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <Users className="w-4 h-4 text-[#ffff00]" />
                     <span className="text-white font-mono text-sm">
-                      <strong>Buyer:</strong> {data.escrowDetails.buyer.slice(0, 6)}...{data.escrowDetails.buyer.slice(-4)}
+                      <strong>Buyer:</strong> {truncateAddress(data.escrowDetails.buyer)}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Users className="w-4 h-4 text-[#ffff00]" />
                     <span className="text-white font-mono text-sm">
-                      <strong>Seller:</strong> {data.escrowDetails.seller.slice(0, 6)}...{data.escrowDetails.seller.slice(-4)}
+                      <strong>Seller:</strong> {truncateAddress(data.escrowDetails.buyer)}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">

@@ -49,9 +49,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   }, [address]);
 
   const formatBalance = (balance: UserAssetDatum) => {
-    const metadata = getTokenMetadata(balance.symbol);
-    const decimals = metadata?.decimals || 18;
-    const formatted = Number(balance.balance) / Math.pow(10, decimals);
+    const formatted = Number(balance.balance) / Math.pow(10, balance.decimals);
     return formatted.toFixed(6);
   };
 
@@ -60,19 +58,10 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
     return metadata?.name || balance.symbol;
   };
 
-  const getChainName = (chainId: number) => {
-    switch (chainId) {
-      case 1: return 'Ethereum';
-      case 8453: return 'Base';
-      case 84532: return 'Base Sepolia';
-      default: return `Chain ${chainId}`;
-    }
-  };
-
   const handleTokenSelect = (balance: UserAssetDatum) => {
-    const metadata = getTokenMetadata(balance.symbol);
-    const decimals = metadata?.decimals || 18;
-    onTokenSelect(balance.symbol, balance.tokenAddress, decimals);
+    // Get the first available chain's contract address
+    const contractAddress = balance.breakdown[0]?.contractAddress || '';
+    onTokenSelect(balance.symbol, contractAddress, balance.decimals);
     setIsOpen(false);
   };
 
@@ -133,7 +122,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
               {unifiedBalances.length > 0 ? (
                 unifiedBalances.map((balance, index) => (
                   <Button
-                    key={`${balance.symbol}-${balance.chainId}-${index}`}
+                    key={`${balance.symbol}-${index}`}
                     variant="primary"
                     onClick={() => handleTokenSelect(balance)}
                     className="w-full justify-start p-3 h-auto"
@@ -142,7 +131,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-[#ffff00] rounded-full flex items-center justify-center">
                           <span className="text-black font-bold text-xs">
-                            {balance.symbol.charAt(0)}
+                            {balance.icon || balance.symbol.charAt(0)}
                           </span>
                         </div>
                         <div className="text-left">
@@ -156,10 +145,10 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
                       </div>
                       <div className="text-right">
                         <Badge variant="warning" className="text-xs">
-                          {getChainName(balance.chainId)}
+                          {balance.breakdown[0]?.chain.name || 'Unknown'}
                         </Badge>
                         <div className="text-xs text-gray-400 mt-1">
-                          {balance.tokenAddress.slice(0, 6)}...{balance.tokenAddress.slice(-4)}
+                          {balance.breakdown[0]?.contractAddress?.slice(0, 6)}...{balance.breakdown[0]?.contractAddress?.slice(-4)}
                         </div>
                       </div>
                     </div>
@@ -236,7 +225,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
               </div>
               <div>
                 <span className="text-gray-400">Chain:</span>
-                <span className="text-white font-mono ml-2">{getChainName(selectedBalance.chainId)}</span>
+                <span className="text-white font-mono ml-2">{selectedBalance.breakdown[0]?.chain.name || 'Unknown'}</span>
               </div>
               <div>
                 <span className="text-gray-400">Balance:</span>
@@ -245,7 +234,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
               <div>
                 <span className="text-gray-400">Address:</span>
                 <span className="text-white font-mono ml-2 text-xs">
-                  {selectedBalance.tokenAddress.slice(0, 8)}...{selectedBalance.tokenAddress.slice(-6)}
+                  {selectedBalance.breakdown[0]?.contractAddress?.slice(0, 8)}...{selectedBalance.breakdown[0]?.contractAddress?.slice(-6)}
                 </span>
               </div>
             </div>

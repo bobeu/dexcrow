@@ -11,6 +11,12 @@ export type AppMode = 'create' | 'interact' | 'trading' | 'admin';
 // Trade Types
 export type TradeType = 'crypto' | 'fiat_p2p' | 'cross_chain';
 
+// State variant
+export type Variant = "danger" | "warning" | "default" | "success" | "info" | undefined;
+
+// State name 
+export type StateName = 'Awaiting Deposit' | 'Awaiting Fulfillment' | 'Dispute Raised' | 'Completed' | 'Canceled' | 'Unknown';
+
 /*eslint-disable */
 
 // Addres type
@@ -54,7 +60,26 @@ export type FunctionName =
   "transfer" |
   "transferFrom"|
   "symbol" |
-  "approve"
+  "approve" |
+  "cancelOrder" |
+  "createOrder" |
+  "deposit" |
+  "rejectArbiter" |
+  "refundBuyer" |
+  "releaseFunds" |
+  "fulfillOrder" |
+  "renounceOwnership" |
+  "transferOwnership" |
+  "raiseDispute" |
+  "setAssetToken" | 
+  "setDeadline" |
+  "setFactory" |
+  "setFactoryVariables" |
+  "setMinimumArbiterHolding" |
+  "activateOrder" |
+  "setVerseToken" |
+  "withdraw" |
+  "resolveDispute";
 
 export interface FilterTransactionDataProps {
   chainId: number | undefined;
@@ -65,6 +90,10 @@ export interface FilterTransactionDataProps {
 export interface FilterTransactionReturnType {
   transactionData: TransactionData[];
   approvedFunctions: string[];
+  othersAbis: {
+    tradefactoryAbi: any;
+    escrowFactoryAbi: any;
+  };
   contractAddresses: {
     EscrowFactory: string;
     Arbitrators: string;
@@ -364,6 +393,25 @@ export interface EscrowReadData {
   arbiterFeePercentage: bigint; // 100 = 1%
   feeDenominator: bigint; // default is 10000
   platformFeeRecipient: Address;
+}
+
+export interface FormattedEscrowDetails {
+  id: Address;
+  buyer: Address;
+  seller: Address;
+  arbiter: Address;
+  amount: string;
+  token: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  deadline: bigint | number;
+  deadlineToDate: string;
+  disputeWindow: number;
+}
+
+export interface UserEscrowReadData extends EscrowReadData {
+  contractAddress: Address;
 }
 
 // EscrowFactory Read Data

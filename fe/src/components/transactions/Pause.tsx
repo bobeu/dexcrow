@@ -95,7 +95,7 @@ const Pause: React.FC<PauseProps> = ({
       <Button
         onClick={handlePause}
         disabled={isPending || isConfirming}
-        variant="destructive"
+        variant="danger"
         className="w-full"
       >
         {isPending || isConfirming ? 'Pausing...' : 'Pause Contract'}

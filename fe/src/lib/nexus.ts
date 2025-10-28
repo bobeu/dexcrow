@@ -5,10 +5,6 @@ export {
   TRADEVERSE_SUPPORTED_CHAINS,
   SUPPORTED_TOKENS,
   TOKEN_METADATA,
-  CONTRACT_ADDRESSES,
-  TRADING_ACCOUNT_ABI,
-  TRADE_FACTORY_ABI,
-  ESCROW_FACTORY_ABI
 } from './nexus/NexusManager';
 
 import { nexusManager } from './nexus/NexusManager';
@@ -76,7 +72,7 @@ export async function bridgeAndDeposit(params: {
   toChainId: number;
   sourceChains?: number[];
   tokenAddress: string;
-  userAddress: string;
+  _userAddress: string;
 }): Promise<BridgeAndExecuteResult> {
   return await nexusManager.bridgeAndDeposit(params);
 }
@@ -106,10 +102,6 @@ export function isChainSupported(chainId: number): boolean {
 
 export function getTokenMetadata(symbol: string) {
   return nexusManager.getTokenMetadata(symbol);
-}
-
-export function getContractAddress(chainId: number, contractType: 'TradeFactory' | 'TradingAccount' | 'EscrowFactory' | 'Arbitrators'): string | undefined {
-  return nexusManager.getContractAddress(chainId, contractType);
 }
 
 // Bridge and Execute functions for EscrowFactory operations

@@ -1,9 +1,9 @@
+/**eslint-disable */
 import React, { useState } from 'react';
-import { EscrowContractState, UserRole, EscrowState } from '@/lib/types';
+import { UserRole, EscrowState, EscrowReadData } from '@/lib/types';
 import { 
   ArrowDown, 
   ArrowUp, 
-  Shield, 
   AlertTriangle, 
   CheckCircle, 
   XCircle,
@@ -11,64 +11,91 @@ import {
   Gavel
 } from 'lucide-react';
 import { Card, Button, Textarea } from '@/components/ui';
+import { formatAmount, isExpired } from '@/utilities';
 
 interface InteractionPanelProps {
-  escrowState: EscrowContractState;
+  escrowState: EscrowReadData;
   userRole: UserRole;
-  isExpired: boolean;
-  onContractAction: (action: string, ...args: any[]) => void;
+  // onContractAction: (action: string, ...args: any[]) => void;
   isLoading: boolean;
 }
 
 const InteractionPanel: React.FC<InteractionPanelProps> = ({
   escrowState,
   userRole,
-  isExpired,
-  onContractAction,
+  // onContractAction,
   isLoading
 }) => {
+  const { escrowDetails: { arbiter, state, deadline, assetAmount }, disputeInfo: { isActive } } = escrowState;
   const [disputeReason, setDisputeReason] = useState('');
   const [arbiterReasoning, setArbiterReasoning] = useState('');
 
-  const isFinalState = escrowState.currentState >= EscrowState.COMPLETED;
-  const isDisputeState = escrowState.currentState === EscrowState.DISPUTE_RAISED;
-  const isAwaitingFulfillment = escrowState.currentState === EscrowState.AWAITING_FULFILLMENT;
-  const isAwaitingDeposit = escrowState.currentState === EscrowState.AWAITING_DEPOSIT;
+  const { 
+    amount,
+    isFinalState,
+    canDeposit,
+    canConfirmFulfillment,
+    canRelease,
+    canRaiseDispute,
+    canRefund,
+    canResolveDispute,
+    isEscrowExpired
+  } = React.useMemo(() => {
+    const isFinalState = state >= EscrowState.COMPLETED;
+    const isDisputeState = state === EscrowState.DISPUTE_RAISED;
+    const isAwaitingFulfillment = state === EscrowState.AWAITING_FULFILLMENT;
+    const isAwaitingDeposit = state === EscrowState.AWAITING_DEPOSIT;
+  
+    const isEscrowExpired = isExpired(deadline);
+    const canDeposit = userRole === 'Buyer' && isAwaitingDeposit;
+    const canConfirmFulfillment = userRole === 'Buyer' && isAwaitingFulfillment;
+    const canRelease = (userRole === 'Buyer' || userRole === 'Arbiter') && isAwaitingFulfillment;
+    const canRefund = (userRole === 'Buyer' && isEscrowExpired) || (userRole === 'Arbiter' && isAwaitingFulfillment);
+    const canRaiseDispute = (userRole === 'Buyer' || userRole === 'Seller') && isAwaitingFulfillment;
+    const canResolveDispute = userRole === 'Arbiter' && isDisputeState;
+    const amount = formatAmount(assetAmount);
 
-  const canDeposit = userRole === 'Buyer' && isAwaitingDeposit;
-  const canConfirmFulfillment = userRole === 'Buyer' && isAwaitingFulfillment;
-  const canRelease = (userRole === 'Buyer' || userRole === 'Arbiter') && isAwaitingFulfillment;
-  const canRefund = (userRole === 'Buyer' && isExpired) || (userRole === 'Arbiter' && isAwaitingFulfillment);
-  const canRaiseDispute = (userRole === 'Buyer' || userRole === 'Seller') && isAwaitingFulfillment;
-  const canResolveDispute = userRole === 'Arbiter' && isDisputeState;
+    return {
+      amount,
+      isFinalState,
+      canDeposit,
+      canConfirmFulfillment,
+      canRelease,
+      canRaiseDispute,
+      canRefund,
+      canResolveDispute,
+      isEscrowExpired
+    }
+  }, [state, deadline, userRole]);
+
 
   const handleDeposit = () => {
-    const amount = (escrowState.assetAmount / 1e18).toString();
-    onContractAction('deposit', amount);
+    // const amount = (escrowState.assetAmount / 1e18).toString();
+    // onContractAction('deposit', amount);
   };
 
   const handleConfirmFulfillment = () => {
-    onContractAction('confirmFulfillment');
+    // onContractAction('confirmFulfillment');
   };
 
   const handleRelease = () => {
-    onContractAction('releaseFunds');
+    // onContractAction('releaseFunds');
   };
 
   const handleRefund = () => {
-    onContractAction('refundFunds');
+    // onContractAction('refundFunds');
   };
 
   const handleRaiseDispute = () => {
-    if (!disputeReason.trim()) return;
-    onContractAction('raiseDispute', disputeReason);
-    setDisputeReason('');
+    // if (!disputeReason.trim()) return;
+    // onContractAction('raiseDispute', disputeReason);
+    // setDisputeReason('');
   };
 
   const handleResolveDispute = (releaseFunds: boolean) => {
-    if (!arbiterReasoning.trim()) return;
-    onContractAction('resolveDispute', releaseFunds, arbiterReasoning);
-    setArbiterReasoning('');
+    // if (!arbiterReasoning.trim()) return;
+    // onContractAction('resolveDispute', releaseFunds, arbiterReasoning);
+    // setArbiterReasoning('');
   };
 
   const ActionCard = ({ 
@@ -119,22 +146,22 @@ const InteractionPanel: React.FC<InteractionPanelProps> = ({
     </Card>
   );
 
-  if (isFinalState) {
+  if(isFinalState) {
     return (
       <Card>
         <div className="text-center">
           <div className="flex items-center justify-center mb-4">
-            {escrowState.currentState === EscrowState.COMPLETED ? (
+            {state === EscrowState.COMPLETED ? (
               <CheckCircle className="w-12 h-12 text-[#00ff00]" />
             ) : (
               <XCircle className="w-12 h-12 text-[#666]" />
             )}
           </div>
           <h3 className="text-lg font-medium text-white mb-2 font-mono tracking-wide">
-            {escrowState.currentState === EscrowState.COMPLETED ? 'Escrow Completed' : 'Escrow Canceled'}
+            {state === EscrowState.COMPLETED ? 'Escrow Completed' : 'Escrow Canceled'}
           </h3>
           <p className="text-[#ffff00] font-mono">
-            {escrowState.currentState === EscrowState.COMPLETED 
+            {state === EscrowState.COMPLETED 
               ? 'The escrow has been successfully completed and funds have been released.'
               : 'The escrow has been canceled and funds have been refunded.'
             }
@@ -155,7 +182,7 @@ const InteractionPanel: React.FC<InteractionPanelProps> = ({
         {canDeposit && (
           <ActionCard
             title="Deposit Assets"
-            description={`Deposit ${((escrowState.assetAmount / 1e18).toFixed(4))} ETH into escrow`}
+            description={`Deposit ${amount} ETH into escrow`}
             icon={ArrowDown}
             onAction={handleDeposit}
             borderColor="yellow"
@@ -190,7 +217,7 @@ const InteractionPanel: React.FC<InteractionPanelProps> = ({
         {canRefund && (
           <ActionCard
             title="Refund Funds"
-            description={isExpired 
+            description={isEscrowExpired 
               ? 'Refund escrowed funds to buyer (deadline expired)'
               : 'Refund escrowed funds to buyer (arbiter decision)'
             }

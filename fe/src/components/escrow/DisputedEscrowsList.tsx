@@ -64,7 +64,7 @@ const DisputedEscrowsList: React.FC = () => {
           Disputed Escrows ({disputedEscrows.length})
         </h2>
         <div className="flex items-center space-x-2">
-          <Badge variant="error" className="font-mono">
+          <Badge variant="danger" className="font-mono">
             Requires Arbitration
           </Badge>
           {isApprovedArbiter && (
@@ -99,7 +99,7 @@ const DisputedEscrowsList: React.FC = () => {
                     <span className="text-white font-mono font-bold">
                       Disputed Escrow #{index + 1}
                     </span>
-                    <Badge variant="error">
+                    <Badge variant="danger">
                       Dispute Raised
                     </Badge>
                   </div>
@@ -181,7 +181,7 @@ const DisputedEscrowsList: React.FC = () => {
                       <strong>Raised by:</strong> {escrow.disputeInfo.disputer.slice(0, 6)}...{escrow.disputeInfo.disputer.slice(-4)}
                     </p>
                     <p className="text-red-400 font-mono text-sm">
-                      <strong>Raised at:</strong> {formatTime(escrow.disputeInfo.disputedAt)}
+                      <strong>Raised at:</strong> {formatTime(escrow.disputeInfo.raisedAt)}
                     </p>
                   </div>
                 </div>

@@ -30,7 +30,7 @@ const CreateEscrowForm: React.FC<CreateEscrowFormProps> = ({
   });
 
   // Token selection handlers
-  const handleTokenSelect = (tokenSymbol: string, tokenAddress: string, decimals: number) => {
+  const handleTokenSelect = (tokenSymbol: string, tokenAddress: string, _decimals: number) => {
     setSelectedTokenSymbol(tokenSymbol);
     setSelectedTokenAddress(tokenAddress);
   };

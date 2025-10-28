@@ -1,6 +1,6 @@
 /* eslint-disable */
-import { Address, ArbitratorsReadData, EscrowFactoryReadData, EscrowReadData, TradeFactoryReadData } from '@/lib/types';
-import { mockArbitratorReadData, mockEscrowfactoryReadData, mockEscrowReadData, mockTradeFactoryReadData } from '@/lib/types/mockdata';
+import { Address, ArbitratorsReadData, EscrowFactoryReadData, EscrowReadData, TradeFactoryReadData, UserEscrowReadData } from '@/lib/types';
+import { mockArbitratorReadData, mockEscrowfactoryReadData, mockEscrowReadData, mockTradeFactoryReadData, mockUserEscrowReadData } from '@/lib/types/mockdata';
 import { filterTransactionData, formatAddr } from '@/utilities';
 import React from 'react';
 import { useAccount, useChainId, useConfig, useReadContracts } from 'wagmi';
@@ -13,8 +13,8 @@ export default function DataProvider({children} : {children: React.ReactNode}) {
   const [escrowFactoryData, setEscrowFactoryData] = React.useState<EscrowFactoryReadData>(mockEscrowfactoryReadData);
   const [arbitratorsData, setArbitratorData] = React.useState<ArbitratorsReadData>(mockArbitratorReadData);
   const [tradeFactoryData, setTradeFactoryData] = React.useState<TradeFactoryReadData>(mockTradeFactoryReadData);
-  const [allEscrows, setAllEscrows] = React.useState<EscrowReadData[]>([mockEscrowReadData]);
-  const [userEscrows, setUserEscrows] = React.useState<EscrowReadData[]>([mockEscrowReadData]);
+  const [allEscrows, setAllEscrows] = React.useState<UserEscrowReadData[]>([mockUserEscrowReadData]);
+  const [userEscrows, setUserEscrows] = React.useState<UserEscrowReadData[]>([mockUserEscrowReadData]);
   const [isApprovedArbiter, setIsApprovedArbiter] = React.useState<boolean>(false);
   const [allowanceToArbiter, setAllowanceToArbiter] = React.useState<bigint>(0n);
   const [verseTokenBalance, setBalances] = React.useState<bigint>(0n);
@@ -140,21 +140,24 @@ export default function DataProvider({children} : {children: React.ReactNode}) {
     
     // Update the state with the result  of the read action
     React.useEffect(() => {
-        let allEscrowData = [mockEscrowReadData];
+        let allEscrowData : UserEscrowReadData[] = [mockUserEscrowReadData];
         if(escrowReadData && escrowReadData.length > 0) {
-            allEscrowData = escrowReadData.map((data_) => {
+            allEscrowData = escrowReadData.map((data_, i) => {
                 const {result, status} = data_;
                 let result_ = mockEscrowReadData;
                 if(status === 'success') {
                   result_ = result as EscrowReadData;
                 }
-                return result_;
+                return {
+                  ...result_,
+                  contractAddress: allEscrowReadObj[i].address
+                };
             });
         }
         const user = account.toLowerCase();
-        const userEscrows = allEscrowData.filter(
+        const userEscrows : UserEscrowReadData[] = allEscrowData.filter(
           q => q.escrowDetails.buyer.toLowerCase() === user || q.escrowDetails.seller === user || q.escrowDetails.arbiter === user
-        );
+        )
         setAllEscrows(allEscrowData);
         setUserEscrows(userEscrows);
     }, [escrowReadData, account]);

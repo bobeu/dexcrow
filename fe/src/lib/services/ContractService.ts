@@ -4,7 +4,7 @@
  */
 
 import { ethers, Contract, providers, Wallet } from 'ethers';
-import { EscrowContractState, EscrowState, Asset, ChainType } from '../types';
+import { EscrowContractState } from '../types';
 
 export class ContractService {
   private provider: providers.Provider;

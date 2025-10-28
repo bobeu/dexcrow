@@ -1,3 +1,5 @@
+/**eslint-disable */
+import { filterTransactionData } from '@/utilities';
 import { 
   NexusSDK, 
   type UserAssetDatum,
@@ -10,14 +12,14 @@ import {
   SUPPORTED_CHAINS_IDS,
   NexusNetwork
 } from '@avail-project/nexus-core';
-import { EIP1193Provider, parseUnits, zeroAddress } from 'viem';
+import { EIP1193Provider, parseUnits } from 'viem';
 
 // TradeVerse supported chains
-export const TRADEVERSE_SUPPORTED_CHAINS = {
-  ETHEREUM: 1,
-  BASE: 8453,
-  BASESEPOLIA: 84532
-} as const;
+export const TRADEVERSE_SUPPORTED_CHAINS = [
+  1,
+  8453,
+  84532
+];
 
 // Supported tokens as per PROMPT.md
 export const SUPPORTED_TOKENS = {
@@ -32,107 +34,6 @@ export const TOKEN_METADATA = {
   [SUPPORTED_TOKENS.USDC]: { decimals: 6, name: 'USD Coin', symbol: 'USDC' },
   [SUPPORTED_TOKENS.USDT]: { decimals: 6, name: 'Tether USD', symbol: 'USDT' },
 } as const;
-
-// Contract addresses for TradeFactory, TradingAccount, EscrowFactory, and Arbitrators
-export const CONTRACT_ADDRESSES = {
-  [TRADEVERSE_SUPPORTED_CHAINS.ETHEREUM]: {
-    TradeFactory: zeroAddress,
-    TradingAccount: zeroAddress,
-    EscrowFactory: zeroAddress,
-    Arbitrators: zeroAddress,
-  },
-  [TRADEVERSE_SUPPORTED_CHAINS.BASE]: {
-    TradeFactory: '0x9f1E3137Eb94C8fc48E515c5d1F59d307c7C6c03',
-    TradingAccount: '0x0000000000000000000000000000000000000000',
-    EscrowFactory: '0x97e7eE7951589c6Ab0914510A381d496f1749F56',
-    Arbitrators: '0x9F9f09832942E8A9030C089A589e4Be8AccC190C',
-  },
-  [TRADEVERSE_SUPPORTED_CHAINS.BASESEPOLIA]: {
-    TradeFactory: '0x9f1E3137Eb94C8fc48E515c5d1F59d307c7C6c03',
-    TradingAccount: '0x0000000000000000000000000000000000000000',
-    EscrowFactory: '0x97e7eE7951589c6Ab0914510A381d496f1749F56',
-    Arbitrators: '0x9F9f09832942E8A9030C089A589e4Be8AccC190C',
-  },
-} as const;
-
-// Contract ABIs
-export const TRADING_ACCOUNT_ABI = [
-  {
-    inputs: [
-      { internalType: 'address', name: 'tokenAddress', type: 'address' },
-      { internalType: 'uint256', name: 'amount', type: 'uint256' },
-      { internalType: 'uint256', name: 'price', type: 'uint256' },
-      { internalType: 'uint256', name: 'expirationHours', type: 'uint256' }
-    ],
-    name: 'createOrder',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { internalType: 'address', name: 'token', type: 'address' }
-    ],
-    name: 'deposit',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { internalType: 'bytes32', name: 'orderId', type: 'bytes32' }
-    ],
-    name: 'cancelOrder',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
-
-export const TRADE_FACTORY_ABI = [
-  {
-    inputs: [
-      { internalType: 'address', name: 'agent', type: 'address' },
-      { internalType: 'string', name: 'nickName', type: 'string' }
-    ],
-    name: 'createTradingAccount',
-    outputs: [{ internalType: 'address', name: 'account', type: 'address' }],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-] as const;
-
-export const ESCROW_FACTORY_ABI = [
-  {
-    inputs: [
-      { internalType: 'address', name: '_buyer', type: 'address' },
-      { internalType: 'address', name: '_seller', type: 'address' },
-      { internalType: 'address', name: '_assetToken', type: 'address' },
-      { internalType: 'uint256', name: '_assetAmount', type: 'uint256' },
-      { internalType: 'uint256', name: '_deadline', type: 'uint256' },
-      { internalType: 'string', name: '_description', type: 'string' },
-      { internalType: 'uint256', name: '_disputeWindowHours', type: 'uint256' }
-    ],
-    name: 'createEscrow',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      { internalType: 'address', name: '_buyer', type: 'address' },
-      { internalType: 'address', name: '_seller', type: 'address' },
-      { internalType: 'address', name: '_assetToken', type: 'address' },
-      { internalType: 'uint256', name: '_assetAmount', type: 'uint256' },
-      { internalType: 'uint256', name: '_deadline', type: 'uint256' },
-      { internalType: 'string', name: '_description', type: 'string' }
-    ],
-    name: 'createEscrowWithDefaultWindow',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-] as const;
 
 export class NexusManager {
   private sdk: NexusSDK | null = null;
@@ -229,21 +130,16 @@ export class NexusManager {
     if (!this.initialized || !this.sdk) {
       throw new Error('SDK not initialized');
     }
-
-    const contractAddress = CONTRACT_ADDRESSES[params.toChainId as keyof typeof CONTRACT_ADDRESSES]?.TradingAccount;
-    if (!contractAddress) {
-      throw new Error(`No contract address found for chain ${params.toChainId}`);
-    }
-
+    const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createOrder']});
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
-      token: params.token as string,
+      token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
       amount: params.amount,
       toChainId: params.toChainId as SUPPORTED_CHAINS_IDS,
       sourceChains: params.sourceChains,
       execute: {
-        contractAddress,
-        contractAbi: TRADING_ACCOUNT_ABI,
-        functionName: 'createOrder',
+        contractAddress: td[0].contractAddress,
+        contractAbi: td[0].abi,
+        functionName: td[0].functionName,
         buildFunctionParams: (token, amount, _chainId, _userAddress) => {
           const decimals = TOKEN_METADATA[token as keyof typeof TOKEN_METADATA]?.decimals || 18;
           const amountWei = parseUnits(amount, decimals);
@@ -252,7 +148,7 @@ export class NexusManager {
           };
         },
         tokenApproval: {
-          token: params.token as string,
+          token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
           amount: params.amount,
         },
       },
@@ -275,27 +171,23 @@ export class NexusManager {
       throw new Error('SDK not initialized');
     }
 
-    const contractAddress = CONTRACT_ADDRESSES[params.toChainId as keyof typeof CONTRACT_ADDRESSES]?.TradingAccount;
-    if (!contractAddress) {
-      throw new Error(`No contract address found for chain ${params.toChainId}`);
-    }
-
+    const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['deposit']});
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
-      token: params.token as string,
+      token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
       amount: params.amount,
       toChainId: params.toChainId as SUPPORTED_CHAINS_IDS,
       sourceChains: params.sourceChains,
       execute: {
-        contractAddress,
-        contractAbi: TRADING_ACCOUNT_ABI,
-        functionName: 'deposit',
-        buildFunctionParams: (token, amount, _chainId, _userAddress) => {
+        contractAddress: td[0].contractAddress,
+        contractAbi: td[0].abi,
+        functionName: td[0].functionName,
+        buildFunctionParams: (_,__, _chainId, _userAddress) => {
           return {
             functionParams: [params.tokenAddress],
           };
         },
         tokenApproval: {
-          token: params.token as string,
+          token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
           amount: params.amount,
         },
       },
@@ -324,21 +216,18 @@ export class NexusManager {
       throw new Error('SDK not initialized');
     }
 
-    const contractAddress = CONTRACT_ADDRESSES[params.toChainId as keyof typeof CONTRACT_ADDRESSES]?.EscrowFactory;
-    if (!contractAddress) {
-      throw new Error(`No EscrowFactory address found for chain ${params.toChainId}`);
-    }
+    const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createEscrow']});
 
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
-      token: params.token as string,
+      token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
       amount: params.amount,
       toChainId: params.toChainId as SUPPORTED_CHAINS_IDS,
       sourceChains: params.sourceChains,
       execute: {
-        contractAddress,
-        contractAbi: ESCROW_FACTORY_ABI,
-        functionName: 'createEscrow',
-        buildFunctionParams: (token, amount, _chainId, _userAddress) => {
+        contractAddress: td[0].contractAddress,
+        contractAbi: td[0].abi,
+        functionName: td[0].functionName,
+        buildFunctionParams: (token, _, _chainId, _userAddress) => {
           const decimals = TOKEN_METADATA[token as keyof typeof TOKEN_METADATA]?.decimals || 18;
           const amountWei = parseUnits(params.assetAmount, decimals);
           return {
@@ -354,7 +243,7 @@ export class NexusManager {
           };
         },
         tokenApproval: {
-          token: params.token as string,
+          token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
           amount: params.amount,
         },
       },
@@ -379,20 +268,17 @@ export class NexusManager {
       throw new Error('SDK not initialized');
     }
 
-    const contractAddress = CONTRACT_ADDRESSES[params.toChainId as keyof typeof CONTRACT_ADDRESSES]?.TradingAccount;
-    if (!contractAddress) {
-      throw new Error(`No contract address found for chain ${params.toChainId}`);
-    }
+    const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createOrder']});
 
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
-      token: params.token as string,
+      token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
       amount: params.amount,
       toChainId: params.toChainId as SUPPORTED_CHAINS_IDS,
       sourceChains: params.sourceChains,
       execute: {
-        contractAddress,
-        contractAbi: TRADING_ACCOUNT_ABI,
-        functionName: 'createOrder',
+        contractAddress: td[0].contractAddress,
+        contractAbi: td[0].abi,
+        functionName: td[0].functionName,
         buildFunctionParams: (token, amount, _chainId, _userAddress) => {
           const decimals = TOKEN_METADATA[token as keyof typeof TOKEN_METADATA]?.decimals || 18;
           const amountWei = parseUnits(amount, decimals);
@@ -401,7 +287,7 @@ export class NexusManager {
           };
         },
         tokenApproval: {
-          token: params.token as string,
+          token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
           amount: params.amount,
         },
       },
@@ -430,21 +316,17 @@ export class NexusManager {
       throw new Error('SDK not initialized');
     }
 
-    const contractAddress = CONTRACT_ADDRESSES[params.toChainId as keyof typeof CONTRACT_ADDRESSES]?.EscrowFactory;
-    if (!contractAddress) {
-      throw new Error(`No EscrowFactory address found for chain ${params.toChainId}`);
-    }
-
+    const { transactionData: td } = filterTransactionData({chainId: params.toChainId, filter: true, functionNames: ['createEscrow']});
     const bridgeAndExecuteParams: BridgeAndExecuteParams = {
-      token: params.token as string,
+      token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
       amount: params.amount,
       toChainId: params.toChainId as SUPPORTED_CHAINS_IDS,
       sourceChains: params.sourceChains,
       execute: {
-        contractAddress,
-        contractAbi: ESCROW_FACTORY_ABI,
-        functionName: 'createEscrow',
-        buildFunctionParams: (token, amount, _chainId, _userAddress) => {
+        contractAddress: td[0].contractAddress,
+        contractAbi: td[0].abi,
+        functionName: td[0].functionName,
+        buildFunctionParams: (token, _, _chainId, _userAddress) => {
           const decimals = TOKEN_METADATA[token as keyof typeof TOKEN_METADATA]?.decimals || 18;
           const amountWei = parseUnits(params.assetAmount, decimals);
           return {
@@ -460,7 +342,7 @@ export class NexusManager {
           };
         },
         tokenApproval: {
-          token: params.token as string,
+          token: params.token as typeof SUPPORTED_TOKENS[keyof typeof SUPPORTED_TOKENS],
           amount: params.amount,
         },
       },
@@ -472,20 +354,20 @@ export class NexusManager {
 
   // Utility functions
   isTokenSupported(tokenSymbol: string): boolean {
-    return Object.values(SUPPORTED_TOKENS).includes(tokenSymbol as string);
+    return Object.values(SUPPORTED_TOKENS).includes(tokenSymbol as any);
   }
 
-  isChainSupported(chainId: number): boolean {
-    return Object.values(TRADEVERSE_SUPPORTED_CHAINS).includes(chainId as string);
+  isChainSupported(chainId: keyof typeof TRADEVERSE_SUPPORTED_CHAINS): boolean {
+    return Object.values(TRADEVERSE_SUPPORTED_CHAINS).includes(chainId as any);
   }
 
   getTokenMetadata(symbol: string) {
     return TOKEN_METADATA[symbol as keyof typeof TOKEN_METADATA];
   }
 
-  getContractAddress(chainId: number, contractType: 'TradeFactory' | 'TradingAccount' | 'EscrowFactory' | 'Arbitrators'): string | undefined {
-    return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]?.[contractType];
-  }
+  // getContractAddress(chainId: number, contractType: 'TradeFactory' | 'TradingAccount' | 'EscrowFactory' | 'Arbitrators'): string | undefined {
+  //   return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES]?.[contractType];
+  // }
 
   // Get current chain ID
   get currentChainId(): number {

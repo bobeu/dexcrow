@@ -1,5 +1,5 @@
 import React from 'react';
-import { EscrowContractState, UserRole, EscrowState } from '@/lib/types';
+import { UserRole, EscrowState, Address, Variant, StateName, EscrowDetails } from '@/lib/types';
 import { 
   Clock, 
   Shield, 
@@ -11,104 +11,93 @@ import {
   FileText
 } from 'lucide-react';
 import { Card, Badge } from '@/components/ui';
+import { formatAmount, formatDate, getTimeRemaining, isExpired, toLower, toNum } from '@/utilities';
+import { Hex, hexToString, zeroAddress } from 'viem';
 
 interface StatusPanelProps {
-  escrowState: EscrowContractState;
+  escrowDetails: EscrowDetails;
   userRole: UserRole;
-  isExpired: boolean;
+  contractAddress: Address;
 }
 
 const StatusPanel: React.FC<StatusPanelProps> = ({ 
-  escrowState, 
+  escrowDetails, 
   userRole, 
-  isExpired 
+  contractAddress
 }) => {
-  const getStateIcon = () => {
-    switch (escrowState.currentState) {
-      case EscrowState.AWAITING_DEPOSIT:
-        return <Clock className="w-5 h-5 text-[#ffff00]" />;
-      case EscrowState.AWAITING_FULFILLMENT:
-        return <Shield className="w-5 h-5 text-[#00ff00]" />;
-      case EscrowState.DISPUTE_RAISED:
-        return <AlertTriangle className="w-5 h-5 text-red-500" />;
-      case EscrowState.COMPLETED:
-        return <CheckCircle className="w-5 h-5 text-[#00ff00]" />;
-      case EscrowState.CANCELED:
-        return <XCircle className="w-5 h-5 text-[#666]" />;
-      default:
-        return <Clock className="w-5 h-5 text-[#666]" />;
-    }
-  };
+  const { buyer, arbiter, seller, assetType, deadline, isEscrowExpired, stateIcon, escrowAmount, description, timeRemaining, stateName, roleVariant } = React.useMemo(() => {
+    const buyer = toLower(escrowDetails.buyer);
+    const seller = toLower(escrowDetails.seller);
+    const arbiter = toLower(escrowDetails.arbiter);
+    const assetType = toLower(escrowDetails.assetToken) === zeroAddress? 'NATIVE' : 'ERC20';
+    const deadline = formatDate(escrowDetails.deadline);
+    const escrowAmount = formatAmount(escrowDetails.assetAmount);
+    const timeRemaining = getTimeRemaining(escrowDetails.deadline);
+    const description = hexToString(escrowDetails.description as Hex);
+    const state = escrowDetails.state;
+    const isEscrowExpired = isExpired(escrowDetails.deadline);
+    let stateIcon = <Clock className="w-5 h-5 text-[#666]" />;
+    // let stateVariant = 'default';
+    let roleVariant : Variant = 'default';
+    let stateName : StateName = 'Unknown';
 
-  const getStateVariant = () => {
-    switch (escrowState.currentState) {
+    switch (state) {
       case EscrowState.AWAITING_DEPOSIT:
-        return 'warning';
+        stateName = 'Awaiting Deposit';
       case EscrowState.AWAITING_FULFILLMENT:
-        return 'success';
+        stateName = 'Awaiting Fulfillment';
       case EscrowState.DISPUTE_RAISED:
-        return 'danger';
+        stateName = 'Dispute Raised';
       case EscrowState.COMPLETED:
-        return 'success';
+        stateName = 'Completed';
       case EscrowState.CANCELED:
-        return 'default';
+        stateName = 'Canceled';
       default:
-        return 'default';
+        stateName = 'Unknown';
     }
-  };
 
-  const getStateName = () => {
-    switch (escrowState.currentState) {
+    switch (state) {
       case EscrowState.AWAITING_DEPOSIT:
-        return 'Awaiting Deposit';
+        stateIcon = <Clock className="w-5 h-5 text-[#ffff00]" />;
       case EscrowState.AWAITING_FULFILLMENT:
-        return 'Awaiting Fulfillment';
+        stateIcon = <Shield className="w-5 h-5 text-[#00ff00]" />;
       case EscrowState.DISPUTE_RAISED:
-        return 'Dispute Raised';
+        stateIcon = <AlertTriangle className="w-5 h-5 text-red-500" />;
       case EscrowState.COMPLETED:
-        return 'Completed';
+        stateIcon = <CheckCircle className="w-5 h-5 text-[#00ff00]" />;
       case EscrowState.CANCELED:
-        return 'Canceled';
+        stateIcon = <XCircle className="w-5 h-5 text-[#666]" />;
       default:
-        return 'Unknown';
+        stateIcon = <Clock className="w-5 h-5 text-[#666]" />;
     }
-  };
 
-  const getRoleVariant = () => {
     switch (userRole) {
       case 'Buyer':
-        return 'info';
+        roleVariant = 'info';
       case 'Seller':
-        return 'success';
+        roleVariant = 'success';
       case 'Arbiter':
-        return 'warning';
+        roleVariant = 'warning';
       default:
-        return 'default';
+        roleVariant = 'default';
     }
-  };
 
-  const formatAmount = (amount: number) => {
-    return (amount / 1e18).toFixed(4);
-  };
-
-  const formatAddress = (address: string) => {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
-
-  const getTimeRemaining = () => {
-    const now = Math.floor(Date.now() / 1000);
-    const remaining = escrowState.deadline - now;
-    
-    if (remaining <= 0) return 'Expired';
-    
-    const days = Math.floor(remaining / (24 * 60 * 60));
-    const hours = Math.floor((remaining % (24 * 60 * 60)) / (60 * 60));
-    const minutes = Math.floor((remaining % (60 * 60)) / 60);
-    
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
-  };
+    return {
+      state,
+      buyer, 
+      seller,
+      arbiter,
+      assetType,
+      deadline,
+      stateIcon,
+      roleVariant,
+      stateName,
+      description,
+      timeRemaining,
+      escrowAmount,
+      isEscrowExpired
+    }
+  }, [escrowDetails]);
 
   const InfoCard = ({ 
     title, 
@@ -142,8 +131,8 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
           <h3 className="text-lg font-semibold text-white font-mono tracking-wide">
             Escrow Status
           </h3>
-          <Badge variant={getStateVariant()} icon={getStateIcon}>
-            {getStateName()}
+          <Badge variant={roleVariant} icon={stateIcon}>
+            {stateName}
           </Badge>
         </div>
         
@@ -151,11 +140,11 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
           <div className="flex items-center space-x-2">
             <User className="w-4 h-4 text-[#ffff00]" />
             <span className="text-sm text-[#ffff00] font-mono">Your Role:</span>
-            <Badge variant={getRoleVariant()}>
+            <Badge variant={roleVariant}>
               {userRole}
             </Badge>
           </div>
-          {isExpired && (
+          {isEscrowExpired && (
             <Badge variant="danger">
               EXPIRED
             </Badge>
@@ -169,19 +158,19 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Contract Address:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.contractAddress!)}
+              {contractAddress}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Trade Type:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.tradeType.replace('_', ' ').toUpperCase()}
+              { assetType }
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Deadline:</span>
             <span className="text-sm text-white font-mono">
-              {new Date(escrowState.deadline * 1000).toLocaleString()}
+              {deadline}
             </span>
           </div>
         </div>
@@ -193,19 +182,19 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Buyer:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.buyer)}
+              {buyer}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Seller:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.seller)}
+              {seller}
             </span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Arbiter:</span>
             <span className="text-sm text-white font-mono">
-              {formatAddress(escrowState.arbiter)}
+              {arbiter}
             </span>
           </div>
         </div>
@@ -217,15 +206,15 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Asset Amount:</span>
             <span className="text-sm text-white font-mono">
-              {formatAmount(escrowState.assetAmount)} ETH
+              {escrowAmount} ETH
             </span>
           </div>
-          <div className="flex justify-between">
+          {/* <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Counter Asset:</span>
             <span className="text-sm text-white font-mono">
               {escrowState.counterAssetAmount} USDC
             </span>
-          </div>
+          </div> */}
         </div>
       </InfoCard>
 
@@ -233,31 +222,31 @@ const StatusPanel: React.FC<StatusPanelProps> = ({
       <InfoCard 
         title="Time Information" 
         icon={Clock} 
-        borderColor={isExpired ? 'red' : 'yellow'}
+        borderColor={isEscrowExpired ? 'red' : 'yellow'}
       >
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Time Remaining:</span>
             <span className={`text-sm font-mono ${
-              isExpired ? 'text-red-500' : 'text-white'
+              isEscrowExpired ? 'text-red-500' : 'text-white'
             }`}>
-              {isExpired ? 'EXPIRED' : getTimeRemaining()}
+              {isEscrowExpired ? 'EXPIRED' : timeRemaining}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-sm text-[#ffff00] font-mono">Dispute Window:</span>
             <span className="text-sm text-white font-mono">
-              {escrowState.disputeWindowHours} hours
+              {toNum(escrowDetails.disputeWindowHours)} hours
             </span>
           </div>
         </div>
       </InfoCard>
 
       {/* Description */}
-      {escrowState.description && (
+      {description && description !== '' && (
         <InfoCard title="Description" icon={FileText}>
           <p className="text-sm text-[#ffff00] font-mono">
-            {escrowState.description}
+            {description}
           </p>
         </InfoCard>
       )}
