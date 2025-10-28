@@ -11,6 +11,8 @@ import {
   // TRADEVERSE_SUPPORTED_CHAINS,
 } from '@/lib/nexus';
 import type { UserAssetDatum, BridgeAndExecuteResult } from '@avail-project/nexus-core';
+import { useNexus } from '@/contexts/NexusProvider';
+import { zeroAddress } from 'viem';
 // import { filterTransactionData } from '@/utilities';
 
 interface BridgeAndExecuteButtonProps {
@@ -43,26 +45,21 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
   children
 }) => {
   const { address, isConnected } = useAccount();
+  const { nexusSDK, nexusManager } = useNexus();
   const [isLoading, setIsLoading] = useState(false);
   const [simulation, setSimulation] = useState<any>(null);
   const [showSimulation, setShowSimulation] = useState(false);
 
   const handleClick = async () => {
-    if (!isConnected || !address) {
+    if (!isConnected || !address || !nexusManager || !nexusSDK) {
       onError?.('Please connect your wallet first');
       return;
     }
 
-    if (!isChainSupported(toChainId)) {
+    if (!isChainSupported(toChainId, nexusManager)) {
       onError?.(`Chain ${toChainId} is not supported by TradeVerse`);
       return;
     }
-
-    // const contractAddress = getContractAddress(toChainId, 'TradingAccount');
-    // if (!contractAddress || contractAddress === '0x0000000000000000000000000000000000000000') {
-    //   onError?.(`TradingAccount contract not deployed on chain ${toChainId}`);
-    //   return;
-    // }
 
     try {
       setIsLoading(true);
@@ -79,7 +76,7 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
           price: orderParams.price,
           expirationHours: orderParams.expirationHours,
           userAddress: address,
-        });
+        }, nexusManager, nexusSDK);
       } else {
         // For deposit simulation, we'll use a simplified approach
         simulationResult = {
@@ -92,8 +89,11 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
           }
         };
       }
-
-      if (!simulationResult.success) {
+      if(!simulationResult) {
+        onError?.('Simulation not ready. Please check that Nexus is correctly initialized');
+        return;
+      }
+      if(!simulationResult.success) {
         onError?.(simulationResult.error || 'Simulation failed');
         return;
       }
@@ -110,7 +110,7 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
   };
 
   const handleExecute = async () => {
-    if (!isConnected || !address) {
+    if (!isConnected || !address || !nexusManager || !nexusSDK) {
       onError?.('Please connect your wallet first');
       return;
     }
@@ -119,7 +119,7 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
       setIsLoading(true);
       setShowSimulation(false);
 
-      let result: BridgeAndExecuteResult;
+      let result: BridgeAndExecuteResult | undefined;
 
       if (action === 'createOrder' && orderParams) {
         result = await bridgeAndCreateOrder({
@@ -131,22 +131,22 @@ const BridgeAndExecuteButton: React.FC<BridgeAndExecuteButtonProps> = ({
           price: orderParams.price,
           expirationHours: orderParams.expirationHours,
           userAddress: address,
-        });
+        }, nexusManager, nexusSDK);
       } else {
         result = await bridgeAndDeposit({
           token: token.symbol,
           amount,
           toChainId,
           sourceChains,
-          tokenAddress: orderParams?.tokenAddress || '0x0000000000000000000000000000000000000000',
+          tokenAddress: orderParams?.tokenAddress || zeroAddress,
           _userAddress: address,
-        });
+        }, nexusManager, nexusSDK);
       }
 
-      if (result.success) {
+      if(result && result.success) {
         onSuccess?.(result);
       } else {
-        onError?.(result.error || 'Transaction failed');
+        onError?.(result?.error || 'Transaction failed');
       }
 
     } catch (error) {

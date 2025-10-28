@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useChainId, useSwitchChain } from 'wagmi';
 import { 
-  initializeWithProvider, 
-  // isInitialized, 
   getUnifiedBalances,
   TRADEVERSE_SUPPORTED_CHAINS 
 } from '@/lib/nexus';
+import { useNexus } from '@/contexts/NexusProvider';
 
 /**
  * @fileoverview Main trading interface component for TradeVerse
@@ -57,6 +56,8 @@ const TradingInterface: React.FC = () => {
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
+  const { nexusManager, nexusSDK } = useNexus();
+  const nexusInitialized = nexusManager && nexusSDK;
 
   // State
   const [orders, setOrders] = useState<Order[]>([]);
@@ -65,29 +66,7 @@ const TradingInterface: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [showOrderDetails, setShowOrderDetails] = useState<string | null>(null);
-  const [nexusInitialized, setNexusInitialized] = useState(false);
   const [userBalances, setUserBalances] = useState<any[]>([]);
-
-  // Initialize Nexus SDK and load data
-  useEffect(() => {
-    const initializeNexus = async () => {
-      if (isConnected && address && !nexusInitialized) {
-        try {
-          // Get the provider from the connected wallet
-          const provider = (window as any).ethereum;
-          if (provider) {
-            await initializeWithProvider(provider);
-            setNexusInitialized(true);
-            console.log('Nexus SDK initialized successfully');
-          }
-        } catch (error) {
-          console.error('Failed to initialize Nexus SDK:', error);
-        }
-      }
-    };
-
-    initializeNexus();
-  }, [isConnected, address, nexusInitialized]);
 
   // Load user balances and data
   useEffect(() => {
@@ -104,7 +83,7 @@ const TradingInterface: React.FC = () => {
         // Load user balances if Nexus is initialized
         if (nexusInitialized) {
           try {
-            const balances = await getUnifiedBalances();
+            const balances = await getUnifiedBalances(nexusManager, nexusSDK);
             setUserBalances(balances);
             console.log('User balances loaded:', balances);
           } catch (error) {
@@ -153,7 +132,7 @@ const TradingInterface: React.FC = () => {
     };
 
     loadData();
-  }, [nexusInitialized]);
+  }, [nexusManager, nexusSDK]);
 
   const handleChainSwitch = async (newChainId: number) => {
     if (chainId !== newChainId) {
@@ -175,19 +154,19 @@ const TradingInterface: React.FC = () => {
       }
       return;
     }
-    if (!nexusInitialized) {
+    if (!nexusManager) {
       console.warn('Nexus SDK not initialized yet');
       return;
     }
     setShowCreateOrder(true);
   };
 
-  const handleOrderSubmit = (orderData: any) => {
-    console.log('Order submitted:', orderData);
-    // In production, this would handle the order creation
-    // For now, we'll just close the modal
-    setShowCreateOrder(false);
-  };
+  // const handleOrderSubmit = (orderData: any) => {
+  //   console.log('Order submitted:', orderData);
+  //   // In production, this would handle the order creation
+  //   // For now, we'll just close the modal
+  //   setShowCreateOrder(false);
+  // };
 
   const handleSubmitOrder = () => {
     // TODO: Implement order submission logic

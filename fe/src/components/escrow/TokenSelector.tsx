@@ -4,6 +4,7 @@ import { Card, Button, Badge } from '@/components/ui';
 import { ChevronDown, Wallet, ExternalLink } from 'lucide-react';
 import { getUnifiedBalances, getTokenMetadata } from '@/lib/nexus';
 import type { UserAssetDatum } from '@avail-project/nexus-core';
+import { useNexus } from '@/contexts/NexusProvider';
 
 interface TokenSelectorProps {
   selectedToken: string | null;
@@ -19,6 +20,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   className = ''
 }) => {
   const { address } = useAccount();
+  const { nexusManager, nexusSDK } = useNexus();
   const [unifiedBalances, setUnifiedBalances] = useState<UserAssetDatum[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -28,14 +30,14 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   // Fetch unified balances when component mounts or address changes
   useEffect(() => {
     const fetchBalances = async () => {
-      if (!address) {
+      if(!address || !nexusManager || !nexusSDK) {
         setUnifiedBalances([]);
         return;
       }
 
       setIsLoading(true);
       try {
-        const balances = await getUnifiedBalances();
+        const balances = await getUnifiedBalances(nexusManager, nexusSDK);
         setUnifiedBalances(balances);
       } catch (error) {
         console.error('Error fetching unified balances:', error);
@@ -54,7 +56,7 @@ const TokenSelector: React.FC<TokenSelectorProps> = ({
   };
 
   const getTokenDisplayName = (balance: UserAssetDatum) => {
-    const metadata = getTokenMetadata(balance.symbol);
+    const metadata = getTokenMetadata(balance.symbol, nexusManager!);
     return metadata?.name || balance.symbol;
   };
 

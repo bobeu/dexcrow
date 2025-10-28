@@ -1,55 +1,30 @@
 // Re-export from NexusManager for backward compatibility
 export { 
-  nexusManager,
   NexusManager,
   TRADEVERSE_SUPPORTED_CHAINS,
   SUPPORTED_TOKENS,
   TOKEN_METADATA,
 } from './nexus/NexusManager';
 
-import { nexusManager } from './nexus/NexusManager';
-import type { UserAssetDatum, BridgeParams, BridgeResult, BridgeAndExecuteResult, SimulationResult, BridgeAndExecuteSimulationResult } from '@avail-project/nexus-core';
-import { EIP1193Provider } from 'viem';
-
-// Backward compatibility functions
-export const getSdk = (chainId: number = 8453) => {
-  return nexusManager;
-};
-
-// Backward compatibility functions using the NexusManager
-
-// Core SDK functions
-export function isInitialized(chainId?: number): boolean {
-    return nexusManager.initialized;
-}
-   
-export async function initializeWithProvider(provider: EIP1193Provider, chainId?: number): Promise<void> {
-  if (chainId) {
-    await nexusManager.updateChainId(chainId);
-  }
-  await nexusManager.initialize(provider);
-}
-   
-export async function deinit(): Promise<void> {
-  await nexusManager.deinitialize();
-}
+import { type UserAssetDatum, type BridgeParams, type BridgeResult, type BridgeAndExecuteResult, type SimulationResult, type BridgeAndExecuteSimulationResult, NexusSDK } from '@avail-project/nexus-core';
+import { NexusManager } from './nexus/NexusManager';
    
 // Balance functions
-export async function getUnifiedBalances(): Promise<UserAssetDatum[]> {
-  return await nexusManager.getUnifiedBalances();
+export async function getUnifiedBalances(nexusManager: NexusManager, sdk: NexusSDK): Promise<UserAssetDatum[]> {
+  return await nexusManager.getUnifiedBalances(sdk);
 }
 
-export async function getUnifiedBalance(symbol: string): Promise<UserAssetDatum | undefined> {
-  return await nexusManager.getUnifiedBalance(symbol);
+export async function getUnifiedBalance(symbol: string, nexusManager: NexusManager, sdk: NexusSDK): Promise<UserAssetDatum | undefined> {
+  return await nexusManager.getUnifiedBalance(symbol, sdk);
 }
 
 // Bridge functions
-export async function bridge(params: BridgeParams): Promise<BridgeResult> {
-  return await nexusManager.bridge(params);
+export async function bridge(params: BridgeParams, nexusManager: NexusManager, sdk: NexusSDK): Promise<BridgeResult | undefined> {
+  return await nexusManager.bridge(params, sdk);
 }
 
-export async function simulateBridge(params: BridgeParams): Promise<SimulationResult> {
-  return await nexusManager.simulateBridge(params);
+export async function simulateBridge(params: BridgeParams, nexusManager: NexusManager, sdk: NexusSDK): Promise<SimulationResult | undefined> {
+  return await nexusManager.simulateBridge(params, sdk);
 }
 
 // Bridge and Execute functions for TradingAccount operations
@@ -62,8 +37,8 @@ export async function bridgeAndCreateOrder(params: {
   price: string;
   expirationHours: number;
   userAddress: string;
-}): Promise<BridgeAndExecuteResult> {
-  return await nexusManager.bridgeAndCreateOrder(params);
+}, nexusManager: NexusManager, sdk: NexusSDK): Promise<BridgeAndExecuteResult | undefined> {
+  return await nexusManager.bridgeAndCreateOrder(params, sdk);
 }
 
 export async function bridgeAndDeposit(params: {
@@ -73,8 +48,8 @@ export async function bridgeAndDeposit(params: {
   sourceChains?: number[];
   tokenAddress: string;
   _userAddress: string;
-}): Promise<BridgeAndExecuteResult> {
-  return await nexusManager.bridgeAndDeposit(params);
+},nexusManager: NexusManager, sdk: NexusSDK): Promise<BridgeAndExecuteResult | undefined> {
+  return await nexusManager.bridgeAndDeposit(params, sdk);
 }
 
 // Simulation functions
@@ -87,20 +62,20 @@ export async function simulateBridgeAndCreateOrder(params: {
   price: string;
   expirationHours: number;
   userAddress: string;
-}): Promise<BridgeAndExecuteSimulationResult> {
-  return await nexusManager.simulateBridgeAndCreateOrder(params);
+}, nexusManager: NexusManager, sdk: NexusSDK): Promise<BridgeAndExecuteSimulationResult | undefined> {
+  return await nexusManager.simulateBridgeAndCreateOrder(params, sdk);
 }
 
 // Utility functions
-export function isTokenSupported(tokenSymbol: string): boolean {
+export function isTokenSupported(tokenSymbol: string, nexusManager: NexusManager): boolean {
   return nexusManager.isTokenSupported(tokenSymbol);
 }
 
-export function isChainSupported(chainId: number): boolean {
+export function isChainSupported(chainId: number, nexusManager: NexusManager): boolean {
   return nexusManager.isChainSupported(chainId);
 }
 
-export function getTokenMetadata(symbol: string) {
+export function getTokenMetadata(symbol: string, nexusManager: NexusManager) {
   return nexusManager.getTokenMetadata(symbol);
 }
 
@@ -118,8 +93,8 @@ export async function bridgeAndCreateEscrow(params: {
   description: string;
   disputeWindowHours: number;
   userAddress: string;
-}): Promise<BridgeAndExecuteResult> {
-  return await nexusManager.bridgeAndCreateEscrow(params);
+}, nexusManager: NexusManager, sdk: NexusSDK): Promise<BridgeAndExecuteResult | undefined> {
+  return await nexusManager.bridgeAndCreateEscrow(params, sdk);
 }
 
 export async function simulateBridgeAndCreateEscrow(params: {
@@ -135,6 +110,6 @@ export async function simulateBridgeAndCreateEscrow(params: {
   description: string;
   disputeWindowHours: number;
   userAddress: string;
-}): Promise<BridgeAndExecuteSimulationResult> {
-  return await nexusManager.simulateBridgeAndCreateEscrow(params);
+}, nexusManager: NexusManager, sdk: NexusSDK): Promise<BridgeAndExecuteSimulationResult | undefined> {
+  return await nexusManager.simulateBridgeAndCreateEscrow(params, sdk);
 }
